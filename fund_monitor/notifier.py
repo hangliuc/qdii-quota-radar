@@ -1,6 +1,5 @@
 """
 飞书通知
-通过 webhook 发送卡片消息（提醒 + 图片按钮）
 """
 
 import requests
@@ -11,24 +10,32 @@ class FeishuNotifier:
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
 
-    def send_reminder(self, image_url: str = ""):
-        """发送每日提醒卡片（含查看图片按钮）"""
+    def send_reminder(self, image_urls: list[str] = None):
+        """发送每日提醒（含多张图片按钮）"""
         today = datetime.now().strftime("%Y-%m-%d")
         title = f"📊 纳斯达克基金限购日报 {today}"
 
         elements = [
             {"tag": "markdown", "content": "今日限购卡片已生成，记得发小红书 📕"},
         ]
-        if image_url:
-            elements.append({
-                "tag": "action",
-                "actions": [{
-                    "tag": "button",
-                    "text": {"tag": "plain_text", "content": "📸 查看今日卡片图"},
-                    "type": "primary",
-                    "url": image_url,
-                }],
+
+        buttons = []
+        for url in (image_urls or []):
+            if "passive" in url:
+                label = "📸 被动型（指数基金）"
+            elif "active" in url:
+                label = "📸 主动型（主动管理）"
+            else:
+                label = "📸 查看卡片图"
+            buttons.append({
+                "tag": "button",
+                "text": {"tag": "plain_text", "content": label},
+                "type": "primary",
+                "url": url,
             })
+
+        if buttons:
+            elements.append({"tag": "action", "actions": buttons})
 
         self._send_card(title, elements)
 
@@ -43,9 +50,7 @@ class FeishuNotifier:
                     print(el["content"])
                 elif el.get("tag") == "action":
                     for btn in el.get("actions", []):
-                        url = btn.get("url", "")
-                        label = btn.get("text", {}).get("content", "")
-                        print(f"  🔗 {label} → {url}")
+                        print(f"  🔗 {btn['text']['content']} → {btn.get('url', '')}")
             print(f"{'=' * 60}\n")
             return
 

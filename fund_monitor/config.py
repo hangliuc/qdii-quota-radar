@@ -8,7 +8,8 @@ from dataclasses import dataclass, field
 @dataclass
 class Config:
     feishu_webhook: str = ""
-    funds: list[dict] = field(default_factory=list)
+    passive_funds: list[dict] = field(default_factory=list)
+    active_funds: list[dict] = field(default_factory=list)
     history_file: str = "data/history.json"
     github_repo: str = ""
 
@@ -17,7 +18,6 @@ class Config:
         with open(path, "r", encoding="utf-8") as f:
             raw = json.load(f)
 
-        # 环境变量覆盖（用于 GitHub Actions）
         env_webhook = os.environ.get("FEISHU_WEBHOOK")
         if env_webhook:
             raw["feishu_webhook"] = env_webhook
@@ -28,7 +28,8 @@ class Config:
 
         return cls(
             feishu_webhook=raw.get("feishu_webhook", ""),
-            funds=raw.get("funds", []),
+            passive_funds=raw.get("passive_funds", raw.get("funds", [])),
+            active_funds=raw.get("active_funds", []),
             history_file=raw.get("history_file", "data/history.json"),
             github_repo=raw.get("github_repo", ""),
         )

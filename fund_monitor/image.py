@@ -99,13 +99,17 @@ def _rounded_rect(draw: ImageDraw.ImageDraw, xy, r, fill):
 
 
 # ── 主函数 ────────────────────────────────────────
-def generate(results: list[dict], output_path: str) -> str:
+def generate(results: list[dict], output_path: str,
+             title: str = "纳斯达克 QDII 基金限购日报",
+             subtitle_prefix: str = "C类份额") -> str:
     """
     生成卡片图并保存。
 
     Args:
         results: scraper.fetch_all 返回的列表
         output_path: 输出 PNG 路径
+        title: 卡片主标题
+        subtitle_prefix: 副标题前缀（日期会自动追加）
 
     Returns:
         output_path
@@ -146,8 +150,8 @@ def generate(results: list[dict], output_path: str) -> str:
 
     # ── 标题 ──
     _rounded_rect(d, (PAD, y, W - PAD, y + HDR_H), CR, TITLE_BG)
-    _center_text(d, W, y + 40, "纳斯达克 QDII 基金限购日报", ft, TITLE_FG)
-    _center_text(d, W, y + 110, f"C类份额 · {today}", fs, SUB_FG)
+    _center_text(d, W, y + 40, title, ft, TITLE_FG)
+    _center_text(d, W, y + 110, f"{subtitle_prefix} · {today}", fs, SUB_FG)
     y += HDR_H + 20
 
     # ── 统计栏 ──

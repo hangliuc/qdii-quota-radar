@@ -25,57 +25,86 @@ def main():
     except Exception as e:
         sys.exit(f"❌ 配置文件错误: {e}")
 
-    # 2. 确定基金列表
-    funds = config.funds
-    if args.fund_codes:
-        funds = [f for f in funds if f["code"] in args.fund_codes]
-        if not funds:
-            sys.exit(f"❌ 指定的基金代码不在配置中: {args.fund_codes}")
+    date_str = datetime.now().strftime("%Y%m%d")
+    image_dir = os.path.join(root, "output")
+    image_urls = []
 
-    print(f"🚀 开始查询 {len(funds)} 只基金...")
-    print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    # 2. 被动型基金（纳斯达克100指数）
+    if config.passive_funds:
+        funds = _filter(config.passive_funds, args.fund_codes)
+        print(f"🚀 被动型基金：查询 {len(funds)} 只...")
+        print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-    # 3. 抓取数据
-    results = fetch_all(funds)
+        results = fetch_all(funds)
+        _record_history(args, root, config, results, "passive")
 
-    # 4. 记录历史 & 检测变化
-    if not args.no_history:
-        history = History(_resolve(root, config.history_file))
-        changes = history.update(results)
-        text = History.format_changes(changes)
-        if text:
-            print(text)
-
-    # 5. 生成卡片图
-    image_url = ""
-    if not args.no_image:
-        date_str = datetime.now().strftime("%Y%m%d")
-        image_name = f"fund_card_{date_str}.png"
-        image_path = os.path.join(root, "output", image_name)
-        generate(results, image_path)
-
-        if config.github_repo:
-            image_url = (
-                f"https://raw.githubusercontent.com/"
-                f"{config.github_repo}/main/output/{image_name}"
+        if not args.no_image:
+            name = f"passive_{date_str}.png"
+            generate(
+                results,
+                os.path.join(image_dir, name),
+                title="纳斯达克被动型基金限购日报",
+                subtitle_prefix="指数基金 · C类份额",
             )
+            if config.github_repo:
+                image_urls.append(
+                    f"https://raw.githubusercontent.com/{config.github_repo}/main/output/{name}"
+                )
 
-    # 6. 发送飞书通知
+    # 3. 主动型基金
+    if config.active_funds:
+        funds = _filter(config.active_funds, args.fund_codes)
+        print(f"\n🚀 主动型基金：查询 {len(funds)} 只...")
+        print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+        results = fetch_all(funds)
+        _record_history(args, root, config, results, "active")
+
+        if not args.no_image:
+            name = f"active_{date_str}.png"
+            generate(
+                results,
+                os.path.join(image_dir, name),
+                title="纳斯达克主动型基金限购日报",
+                subtitle_prefix="主动管理 QDII",
+            )
+            if config.github_repo:
+                image_urls.append(
+                    f"https://raw.githubusercontent.com/{config.github_repo}/main/output/{name}"
+                )
+
+    # 4. 发送飞书通知
     if not args.no_notify:
         webhook = "" if args.dry_run else config.feishu_webhook
-        FeishuNotifier(webhook).send_reminder(image_url)
+        FeishuNotifier(webhook).send_reminder(image_urls)
 
-    # 7. 统计
-    errors = sum(1 for r in results if r.get("error"))
-    if errors:
-        print(f"\n⚠️ {errors} 只基金查询失败")
     print("\n✅ 完成！")
 
 
+def _filter(funds: list[dict], codes) -> list[dict]:
+    if not codes:
+        return funds
+    return [f for f in funds if f["code"] in codes]
+
+
+def _record_history(args, root, config, results, prefix):
+    if args.no_history:
+        return
+    path = _resolve(root, config.history_file)
+    # 给不同类型用不同的 history key（同一个文件）
+    history = History(path, namespace=prefix)
+    changes = history.update(results)
+    text = History.format_changes(changes)
+    if text:
+        print(text)
+
+    errors = sum(1 for r in results if r.get("error"))
+    if errors:
+        print(f"  ⚠️ {errors} 只基金查询失败")
+
+
 def _parse_args():
-    p = argparse.ArgumentParser(
-        description="支付宝纳斯达克 QDII 基金限购监控"
-    )
+    p = argparse.ArgumentParser(description="支付宝纳斯达克 QDII 基金限购监控")
     p.add_argument("--config", default="config.json", help="配置文件路径")
     p.add_argument("--fund-codes", nargs="+", help="只查询指定基金代码")
     p.add_argument("--dry-run", action="store_true", help="不推送飞书")

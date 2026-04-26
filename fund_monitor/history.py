@@ -1,6 +1,5 @@
 """
 历史记录 & 变动检测
-记录每天的限购额度，对比前一天的变化
 """
 
 import json
@@ -10,8 +9,9 @@ from typing import Optional
 
 
 class History:
-    def __init__(self, path: str):
+    def __init__(self, path: str, namespace: str = "default"):
         self.path = path
+        self.ns = namespace
         self._data = self._load()
 
     def _load(self) -> dict:
@@ -29,14 +29,9 @@ class History:
             json.dump(self._data, f, ensure_ascii=False, indent=2)
 
     def update(self, results: list[dict]) -> list[dict]:
-        """
-        写入今天的数据，返回与上次的差异列表。
-
-        Returns:
-            [{"code", "name", "old_limit", "new_limit", "old_status", "new_status"}, ...]
-        """
         today = datetime.now().strftime("%Y-%m-%d")
-        last = self._data.get("latest", {})
+        ns_data = self._data.setdefault(self.ns, {})
+        last = ns_data.get("latest", {})
         changes = []
 
         today_record = {}
@@ -47,27 +42,23 @@ class History:
                 "purchase_status": r.get("purchase_status", "未知"),
                 "purchase_limit": r.get("purchase_limit", "未知"),
             }
-
             old = last.get(code, {})
             if old:
                 ol, nl = old.get("purchase_limit", "未知"), r.get("purchase_limit", "未知")
-                os_, ns = old.get("purchase_status", "未知"), r.get("purchase_status", "未知")
-                if ol != nl or os_ != ns:
+                os_, ns_ = old.get("purchase_status", "未知"), r.get("purchase_status", "未知")
+                if ol != nl or os_ != ns_:
                     changes.append({
-                        "code": code,
-                        "name": r.get("name", ""),
+                        "code": code, "name": r.get("name", ""),
                         "old_limit": ol, "new_limit": nl,
-                        "old_status": os_, "new_status": ns,
+                        "old_status": os_, "new_status": ns_,
                     })
 
-        self._data["latest"] = today_record
-        self._data.setdefault("daily", {})[today] = today_record
-
-        # 只保留最近 30 天
-        daily = self._data["daily"]
+        ns_data["latest"] = today_record
+        daily = ns_data.setdefault("daily", {})
+        daily[today] = today_record
         if len(daily) > 30:
-            for old_date in sorted(daily.keys())[:-30]:
-                del daily[old_date]
+            for d in sorted(daily.keys())[:-30]:
+                del daily[d]
 
         self._save()
         return changes
@@ -76,7 +67,7 @@ class History:
     def format_changes(changes: list[dict]) -> Optional[str]:
         if not changes:
             return None
-        lines = ["📢 限购额度变化提醒：", ""]
+        lines = ["📢 限购额度变化：", ""]
         for c in changes:
             lines.append(f"  {c['name']}({c['code']}):")
             if c["old_status"] != c["new_status"]:

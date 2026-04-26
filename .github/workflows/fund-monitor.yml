@@ -2,7 +2,7 @@ name: Alipay NASDAQ QDII Fund Monitor
 
 on:
   schedule:
-    # 每天北京时间 12:00 运行 (UTC+8 → UTC 4:00)
+    # 每天北京时间 12:00 (UTC 4:00)
     - cron: '0 4 * * *'
   workflow_dispatch:
 
@@ -21,7 +21,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
           pip install -r requirements.txt
 
-      - name: Scrape & generate image
+      - name: Scrape & generate images
         run: python main.py --no-notify
 
       - name: Commit & push
@@ -43,7 +43,8 @@ jobs:
           from fund_monitor.notifier import FeishuNotifier
           webhook = os.environ.get('FEISHU_WEBHOOK', '')
           repo = os.environ.get('GITHUB_REPOSITORY', '')
-          date_str = datetime.now().strftime('%Y%m%d')
-          url = f'https://raw.githubusercontent.com/{repo}/main/output/fund_card_{date_str}.png' if repo else ''
-          FeishuNotifier(webhook).send_reminder(url)
+          d = datetime.now().strftime('%Y%m%d')
+          base = f'https://raw.githubusercontent.com/{repo}/main/output'
+          urls = [f'{base}/passive_{d}.png', f'{base}/active_{d}.png'] if repo else []
+          FeishuNotifier(webhook).send_reminder(urls)
           "
