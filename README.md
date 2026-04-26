@@ -1,6 +1,6 @@
 # 支付宝纳斯达克 QDII 基金监控
 
-每天自动抓取支付宝中纳斯达克相关 QDII 基金（被动型 & 主动型）的**限购额度、收益率、手续费**等信息，推送到飞书群。
+每天自动抓取支付宝中纳斯达克相关 QDII 基金（被动型 & 主动型）的**限购额度、近1年收益率**等信息，生成小红书卡片图，推送到飞书。
 
 数据源：天天基金网（东方财富）
 
@@ -15,10 +15,10 @@
 ```bash
 pip install -r requirements.txt
 
-# 输出到控制台
+# 输出到控制台（不推飞书）
 python main.py --dry-run
 
-# 推送到飞书
+# 正常运行（推飞书 + 生成图片）
 python main.py
 
 # 只查指定基金
@@ -29,22 +29,29 @@ python main.py --fund-codes 008971 019172
 
 编辑 `config.json`：
 - `feishu_webhook` — 飞书机器人 webhook 地址
-- `funds` — 要监控的基金列表，可自由增减
+- `funds` — 要监控的基金列表
+- `github_repo` — GitHub 仓库路径（用于生成图片链接）
 
-## GitHub Actions 定时运行
+## GitHub Actions
+
+每天北京时间 12:00 自动运行，也可手动触发。
 
 1. Fork 仓库
 2. Settings → Secrets → 添加 `FEISHU_WEBHOOK`
-3. 默认每天北京时间 9:00 自动运行，也可手动触发
 
-## 文件说明
+## 项目结构
 
 ```
-main.py          入口
-fund_scraper.py  从天天基金网抓取限购信息
-notifier.py      飞书推送 & 报告格式化
-image_gen.py     生成小红书卡片图
-history.py       历史记录 & 变动检测
-config.json      基金列表 & webhook 配置
-output/          生成的图片（gitignore）
+main.py                     入口
+fund_monitor/
+  ├── __init__.py
+  ├── cli.py                命令行解析 & 流程编排
+  ├── config.py             配置加载
+  ├── scraper.py            天天基金数据抓取
+  ├── history.py            历史记录 & 变动检测
+  ├── image.py              小红书卡片图生成
+  └── notifier.py           飞书通知
+config.json                 基金列表 & 配置
+data/                       历史数据
+output/                     生成的卡片图
 ```

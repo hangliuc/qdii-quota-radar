@@ -1,10 +1,5 @@
 {
   "latest": {
-    "000834": {
-      "name": "大成纳斯达克100ETF联接(QDII)A",
-      "purchase_status": "限大额",
-      "purchase_limit": "200.00元"
-    },
     "008971": {
       "name": "大成纳斯达克100ETF联接(QDII)C",
       "purchase_status": "限大额",
@@ -15,18 +10,8 @@
       "purchase_status": "暂停申购",
       "purchase_limit": "5000.00元"
     },
-    "270042": {
-      "name": "广发纳斯达克100ETF联接人民币(QDII)A",
-      "purchase_status": "限大额",
-      "purchase_limit": "10.00元"
-    },
     "006479": {
       "name": "广发纳斯达克100ETF联接人民币(QDII)C",
-      "purchase_status": "限大额",
-      "purchase_limit": "10.00元"
-    },
-    "040046": {
-      "name": "华安纳斯达克100ETF联接(QDII)A",
       "purchase_status": "限大额",
       "purchase_limit": "10.00元"
     },
@@ -35,58 +20,28 @@
       "purchase_status": "限大额",
       "purchase_limit": "10.00元"
     },
-    "161130": {
-      "name": "易方达纳斯达克100ETF联接(QDII-LOF)A(人民币)",
-      "purchase_status": "暂停申购",
-      "purchase_limit": "10.00元"
-    },
     "012870": {
       "name": "易方达纳斯达克100ETF联接(QDII-LOF)C(人民币)",
       "purchase_status": "暂停申购",
       "purchase_limit": "10.00元"
-    },
-    "015299": {
-      "name": "华夏纳斯达克100ETF发起式联接(QDII)A",
-      "purchase_status": "暂停申购",
-      "purchase_limit": "100.00元"
     },
     "015300": {
       "name": "华夏纳斯达克100ETF发起式联接(QDII)C",
       "purchase_status": "暂停申购",
       "purchase_limit": "100.00元"
     },
-    "016452": {
-      "name": "南方纳斯达克100指数发起(QDII)A",
-      "purchase_status": "限大额",
-      "purchase_limit": "200.00元"
-    },
     "016453": {
       "name": "南方纳斯达克100指数发起(QDII)C",
       "purchase_status": "限大额",
       "purchase_limit": "200.00元"
-    },
-    "018043": {
-      "name": "天弘纳斯达克100指数发起(QDII)A",
-      "purchase_status": "限大额",
-      "purchase_limit": "100.00元"
     },
     "018044": {
       "name": "天弘纳斯达克100指数发起(QDII)C",
       "purchase_status": "限大额",
       "purchase_limit": "100.00元"
     },
-    "017091": {
-      "name": "景顺长城纳斯达克科技ETF联接(QDII)A人民币",
-      "purchase_status": "暂停申购",
-      "purchase_limit": "100.00元"
-    },
     "017093": {
       "name": "景顺长城纳斯达克科技ETF联接(QDII)C人民币",
-      "purchase_status": "暂停申购",
-      "purchase_limit": "100.00元"
-    },
-    "016532": {
-      "name": "嘉实纳斯达克100ETF发起联接(QDII)A人民币",
       "purchase_status": "暂停申购",
       "purchase_limit": "100.00元"
     },
@@ -95,19 +50,9 @@
       "purchase_status": "暂停申购",
       "purchase_limit": "100.00元"
     },
-    "016055": {
-      "name": "博时纳斯达克100ETF发起式联接(QDII)A人民币",
-      "purchase_status": "暂停申购",
-      "purchase_limit": "100.00元"
-    },
     "016057": {
       "name": "博时纳斯达克100ETF发起式联接(QDII)C人民币",
       "purchase_status": "暂停申购",
-      "purchase_limit": "100.00元"
-    },
-    "019547": {
-      "name": "招商纳斯达克100ETF发起式联接(QDII)A",
-      "purchase_status": "限大额",
       "purchase_limit": "100.00元"
     },
     "019548": {
@@ -115,28 +60,13 @@
       "purchase_status": "限大额",
       "purchase_limit": "100.00元"
     },
-    "019524": {
-      "name": "华泰柏瑞纳斯达克100ETF发起式联接(QDII)A",
-      "purchase_status": "限大额",
-      "purchase_limit": "10.00元"
-    },
     "019525": {
       "name": "华泰柏瑞纳斯达克100ETF发起式联接(QDII)C",
       "purchase_status": "限大额",
       "purchase_limit": "10.00元"
     },
-    "019172": {
-      "name": "摩根纳斯达克100指数(QDII)人民币A",
-      "purchase_status": "限大额",
-      "purchase_limit": "100.00元"
-    },
     "019173": {
       "name": "摩根纳斯达克100指数(QDII)人民币C",
-      "purchase_status": "限大额",
-      "purchase_limit": "100.00元"
-    },
-    "018966": {
-      "name": "汇添富纳斯达克100ETF发起式联接(QDII)人民币A",
       "purchase_status": "限大额",
       "purchase_limit": "100.00元"
     },
@@ -145,18 +75,8 @@
       "purchase_status": "限大额",
       "purchase_limit": "100.00元"
     },
-    "539001": {
-      "name": "建信纳斯达克100指数(QDII)A人民币",
-      "purchase_status": "限大额",
-      "purchase_limit": "100.00元"
-    },
     "012752": {
       "name": "建信纳斯达克100指数(QDII)C人民币",
-      "purchase_status": "限大额",
-      "purchase_limit": "100.00元"
-    },
-    "019736": {
-      "name": "宝盈纳斯达克100指数发起(QDII)A人民币",
       "purchase_status": "限大额",
       "purchase_limit": "100.00元"
     },
@@ -164,11 +84,6 @@
       "name": "宝盈纳斯达克100指数发起(QDII)C人民币",
       "purchase_status": "限大额",
       "purchase_limit": "100.00元"
-    },
-    "019441": {
-      "name": "万家纳斯达克100指数发起式(QDII)A",
-      "purchase_status": "限大额",
-      "purchase_limit": "1000.00元"
     },
     "019442": {
       "name": "万家纳斯达克100指数发起式(QDII)C",
@@ -178,11 +93,6 @@
   },
   "daily": {
     "2026-04-26": {
-      "000834": {
-        "name": "大成纳斯达克100ETF联接(QDII)A",
-        "purchase_status": "限大额",
-        "purchase_limit": "200.00元"
-      },
       "008971": {
         "name": "大成纳斯达克100ETF联接(QDII)C",
         "purchase_status": "限大额",
@@ -193,18 +103,8 @@
         "purchase_status": "暂停申购",
         "purchase_limit": "5000.00元"
       },
-      "270042": {
-        "name": "广发纳斯达克100ETF联接人民币(QDII)A",
-        "purchase_status": "限大额",
-        "purchase_limit": "10.00元"
-      },
       "006479": {
         "name": "广发纳斯达克100ETF联接人民币(QDII)C",
-        "purchase_status": "限大额",
-        "purchase_limit": "10.00元"
-      },
-      "040046": {
-        "name": "华安纳斯达克100ETF联接(QDII)A",
         "purchase_status": "限大额",
         "purchase_limit": "10.00元"
       },
@@ -213,58 +113,28 @@
         "purchase_status": "限大额",
         "purchase_limit": "10.00元"
       },
-      "161130": {
-        "name": "易方达纳斯达克100ETF联接(QDII-LOF)A(人民币)",
-        "purchase_status": "暂停申购",
-        "purchase_limit": "10.00元"
-      },
       "012870": {
         "name": "易方达纳斯达克100ETF联接(QDII-LOF)C(人民币)",
         "purchase_status": "暂停申购",
         "purchase_limit": "10.00元"
-      },
-      "015299": {
-        "name": "华夏纳斯达克100ETF发起式联接(QDII)A",
-        "purchase_status": "暂停申购",
-        "purchase_limit": "100.00元"
       },
       "015300": {
         "name": "华夏纳斯达克100ETF发起式联接(QDII)C",
         "purchase_status": "暂停申购",
         "purchase_limit": "100.00元"
       },
-      "016452": {
-        "name": "南方纳斯达克100指数发起(QDII)A",
-        "purchase_status": "限大额",
-        "purchase_limit": "200.00元"
-      },
       "016453": {
         "name": "南方纳斯达克100指数发起(QDII)C",
         "purchase_status": "限大额",
         "purchase_limit": "200.00元"
-      },
-      "018043": {
-        "name": "天弘纳斯达克100指数发起(QDII)A",
-        "purchase_status": "限大额",
-        "purchase_limit": "100.00元"
       },
       "018044": {
         "name": "天弘纳斯达克100指数发起(QDII)C",
         "purchase_status": "限大额",
         "purchase_limit": "100.00元"
       },
-      "017091": {
-        "name": "景顺长城纳斯达克科技ETF联接(QDII)A人民币",
-        "purchase_status": "暂停申购",
-        "purchase_limit": "100.00元"
-      },
       "017093": {
         "name": "景顺长城纳斯达克科技ETF联接(QDII)C人民币",
-        "purchase_status": "暂停申购",
-        "purchase_limit": "100.00元"
-      },
-      "016532": {
-        "name": "嘉实纳斯达克100ETF发起联接(QDII)A人民币",
         "purchase_status": "暂停申购",
         "purchase_limit": "100.00元"
       },
@@ -273,19 +143,9 @@
         "purchase_status": "暂停申购",
         "purchase_limit": "100.00元"
       },
-      "016055": {
-        "name": "博时纳斯达克100ETF发起式联接(QDII)A人民币",
-        "purchase_status": "暂停申购",
-        "purchase_limit": "100.00元"
-      },
       "016057": {
         "name": "博时纳斯达克100ETF发起式联接(QDII)C人民币",
         "purchase_status": "暂停申购",
-        "purchase_limit": "100.00元"
-      },
-      "019547": {
-        "name": "招商纳斯达克100ETF发起式联接(QDII)A",
-        "purchase_status": "限大额",
         "purchase_limit": "100.00元"
       },
       "019548": {
@@ -293,28 +153,13 @@
         "purchase_status": "限大额",
         "purchase_limit": "100.00元"
       },
-      "019524": {
-        "name": "华泰柏瑞纳斯达克100ETF发起式联接(QDII)A",
-        "purchase_status": "限大额",
-        "purchase_limit": "10.00元"
-      },
       "019525": {
         "name": "华泰柏瑞纳斯达克100ETF发起式联接(QDII)C",
         "purchase_status": "限大额",
         "purchase_limit": "10.00元"
       },
-      "019172": {
-        "name": "摩根纳斯达克100指数(QDII)人民币A",
-        "purchase_status": "限大额",
-        "purchase_limit": "100.00元"
-      },
       "019173": {
         "name": "摩根纳斯达克100指数(QDII)人民币C",
-        "purchase_status": "限大额",
-        "purchase_limit": "100.00元"
-      },
-      "018966": {
-        "name": "汇添富纳斯达克100ETF发起式联接(QDII)人民币A",
         "purchase_status": "限大额",
         "purchase_limit": "100.00元"
       },
@@ -323,18 +168,8 @@
         "purchase_status": "限大额",
         "purchase_limit": "100.00元"
       },
-      "539001": {
-        "name": "建信纳斯达克100指数(QDII)A人民币",
-        "purchase_status": "限大额",
-        "purchase_limit": "100.00元"
-      },
       "012752": {
         "name": "建信纳斯达克100指数(QDII)C人民币",
-        "purchase_status": "限大额",
-        "purchase_limit": "100.00元"
-      },
-      "019736": {
-        "name": "宝盈纳斯达克100指数发起(QDII)A人民币",
         "purchase_status": "限大额",
         "purchase_limit": "100.00元"
       },
@@ -342,11 +177,6 @@
         "name": "宝盈纳斯达克100指数发起(QDII)C人民币",
         "purchase_status": "限大额",
         "purchase_limit": "100.00元"
-      },
-      "019441": {
-        "name": "万家纳斯达克100指数发起式(QDII)A",
-        "purchase_status": "限大额",
-        "purchase_limit": "1000.00元"
       },
       "019442": {
         "name": "万家纳斯达克100指数发起式(QDII)C",

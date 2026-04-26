@@ -2,20 +2,17 @@ name: Alipay NASDAQ QDII Fund Monitor
 
 on:
   schedule:
-    # 每天北京时间 9:00 运行 (UTC+8 → UTC 1:00)
-    - cron: '0 1 * * *'
-  workflow_dispatch: # 支持手动触发
+    # 每天北京时间 12:00 运行 (UTC+8 → UTC 4:00)
+    - cron: '0 4 * * *'
+  workflow_dispatch:
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -24,10 +21,10 @@ jobs:
           sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
           pip install -r requirements.txt
 
-      - name: Scrape data & generate image (no notify yet)
+      - name: Scrape & generate image
         run: python main.py --no-notify
 
-      - name: Commit & push data + image
+      - name: Commit & push
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -35,7 +32,7 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: update $(date +%Y-%m-%d)"
           git push || true
 
-      - name: Send Feishu notification (image is now on GitHub)
+      - name: Send Feishu notification
         env:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -43,11 +40,10 @@ jobs:
           python -c "
           import os
           from datetime import datetime
-          from notifier import send_notification, build_reminder_elements
+          from fund_monitor.notifier import FeishuNotifier
           webhook = os.environ.get('FEISHU_WEBHOOK', '')
           repo = os.environ.get('GITHUB_REPOSITORY', '')
           date_str = datetime.now().strftime('%Y%m%d')
-          image_url = f'https://raw.githubusercontent.com/{repo}/main/output/fund_card_{date_str}.png' if repo else ''
-          title, elements = build_reminder_elements(image_url)
-          send_notification(webhook, title, elements)
+          url = f'https://raw.githubusercontent.com/{repo}/main/output/fund_card_{date_str}.png' if repo else ''
+          FeishuNotifier(webhook).send_reminder(url)
           "
