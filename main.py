@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 from fund_scraper import fetch_all_funds
-from notifier import send_notification, format_reminder
+from notifier import send_notification, build_reminder_elements
 from history import update_history, format_changes
 from image_gen import generate_card
 
@@ -87,16 +87,16 @@ def main():
         image_path = os.path.join(image_dir, image_name)
         generate_card(results, image_path)
 
-        # 构造 GitHub raw 图片链接（commit 后可访问）
-        repo = os.environ.get("GITHUB_REPOSITORY", "")
+        # 构造 GitHub raw 图片链接
+        repo = os.environ.get("GITHUB_REPOSITORY") or config.get("github_repo", "")
         if repo:
             image_url = f"https://raw.githubusercontent.com/{repo}/main/output/{image_name}"
 
-    # 发送飞书提醒（含图片链接）
+    # 发送飞书提醒（含图片链接按钮）
     if not args.no_notify:
         webhook = "" if args.dry_run else config.get("feishu_webhook", "")
-        title, content = format_reminder(image_url)
-        send_notification(webhook, title, content)
+        title, elements = build_reminder_elements(image_url)
+        send_notification(webhook, title, elements)
 
     # 统计
     error_count = sum(1 for r in results if r.get("error"))

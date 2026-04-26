@@ -6,14 +6,26 @@ import requests
 from datetime import datetime
 
 
-def send_notification(webhook_url: str, title: str, content: str):
-    """通过飞书机器人 webhook 发送卡片通知"""
+def send_notification(webhook_url: str, title: str, elements: list):
+    """
+    通过飞书机器人 webhook 发送卡片通知
+
+    Args:
+        webhook_url: 飞书机器人 webhook 地址
+        title: 卡片标题
+        elements: 飞书卡片 elements 列表
+    """
     if not webhook_url:
         print("⚠️ 飞书 webhook 未配置，回退到控制台输出")
         print(f"\n{'='*60}")
         print(f"📢 {title}")
         print(f"{'='*60}")
-        print(content)
+        for el in elements:
+            if el.get("tag") == "markdown":
+                print(el.get("content", ""))
+            elif el.get("tag") == "action":
+                for btn in el.get("actions", []):
+                    print(f"  🔗 {btn.get('text', {}).get('content', '')} → {btn.get('url', '')}")
         print(f"{'='*60}\n")
         return
 
@@ -24,9 +36,7 @@ def send_notification(webhook_url: str, title: str, content: str):
                 "title": {"tag": "plain_text", "content": title},
                 "template": "blue",
             },
-            "elements": [
-                {"tag": "markdown", "content": content},
-            ],
+            "elements": elements,
         },
     }
 
@@ -42,25 +52,36 @@ def send_notification(webhook_url: str, title: str, content: str):
             print(f"⚠️ 飞书 HTTP {resp.status_code}: {resp.text}")
     except Exception as e:
         print(f"⚠️ 飞书推送失败: {e}")
-        print(f"\n{title}\n{content}")
 
 
-def format_reminder(image_url: str = "") -> tuple[str, str]:
+def build_reminder_elements(image_url: str = "") -> tuple[str, list]:
     """
-    格式化飞书提醒消息
-
-    Args:
-        image_url: 图片直链（GitHub raw URL）
+    构建飞书卡片消息：提醒文字 + 查看图片按钮
 
     Returns:
-        (title, content)
+        (title, elements)
     """
     today = datetime.now().strftime("%Y-%m-%d")
     title = f"📊 纳斯达克基金限购日报 {today}"
 
-    lines = ["今日限购卡片已生成，记得发小红书 📕"]
-    if image_url:
-        lines.append("")
-        lines.append(f"![fund_card]({image_url})")
+    elements = [
+        {
+            "tag": "markdown",
+            "content": "今日限购卡片已生成，记得发小红书 📕",
+        },
+    ]
 
-    return title, "\n".join(lines)
+    if image_url:
+        elements.append({
+            "tag": "action",
+            "actions": [
+                {
+                    "tag": "button",
+                    "text": {"tag": "plain_text", "content": "📸 查看今日卡片图"},
+                    "type": "primary",
+                    "url": image_url,
+                }
+            ],
+        })
+
+    return title, elements

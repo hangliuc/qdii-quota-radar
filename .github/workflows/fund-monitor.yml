@@ -43,11 +43,11 @@ jobs:
           python -c "
           import os
           from datetime import datetime
-          from notifier import send_notification, format_reminder
+          from notifier import send_notification, build_reminder_elements
           webhook = os.environ.get('FEISHU_WEBHOOK', '')
           repo = os.environ.get('GITHUB_REPOSITORY', '')
           date_str = datetime.now().strftime('%Y%m%d')
           image_url = f'https://raw.githubusercontent.com/{repo}/main/output/fund_card_{date_str}.png' if repo else ''
-          title, content = format_reminder(image_url)
-          send_notification(webhook, title, content)
+          title, elements = build_reminder_elements(image_url)
+          send_notification(webhook, title, elements)
           "

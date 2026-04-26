@@ -20,5 +20,6 @@
     {"code": "019737", "name": "宝盈纳斯达克100指数(QDII)C"},
     {"code": "019442", "name": "万家纳斯达克100指数(QDII)C"}
   ],
-  "history_file": "data/history.json"
+  "history_file": "data/history.json",
+  "github_repo": "hangliuc/alipay-nasdaq-fund-monitor"
 }
