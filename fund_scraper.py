@@ -1,5 +1,5 @@
 """
-基金限购额度抓取模块
+基金限购额度 & 收益率抓取模块
 数据源：天天基金网
 """
 
@@ -7,14 +7,11 @@ import re
 import time
 import random
 import requests
-from bs4 import BeautifulSoup
 from typing import Optional
 
 
-# 天天基金网基金交易页面（最准确的限购信息来源）
+# 天天基金网基金交易页面
 FUND_TRADE_URL = "http://fund.eastmoney.com/{code}.html"
-# 天天基金网基金详情页（购买信息）
-FUND_DETAIL_URL = "http://fundf10.eastmoney.com/jbgk_{code}.html"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -28,7 +25,7 @@ HEADERS = {
 
 def fetch_fund_purchase_info(fund_code: str) -> dict:
     """
-    抓取单只基金的限购信息
+    抓取单只基金的限购信息和近1年收益率
 
     Returns:
         dict: {
@@ -36,6 +33,7 @@ def fetch_fund_purchase_info(fund_code: str) -> dict:
             "name": "大成纳斯达克100ETF联接(QDII)C",
             "purchase_status": "限大额" | "开放申购" | "暂停申购",
             "purchase_limit": "200.00元" | "不限" | "暂停",
+            "return_1y": "34.44%" | "",
             "raw_text": "原始文本",
             "error": None | "错误信息"
         }
@@ -45,12 +43,12 @@ def fetch_fund_purchase_info(fund_code: str) -> dict:
         "name": "",
         "purchase_status": "未知",
         "purchase_limit": "未知",
+        "return_1y": "",
         "raw_text": "",
         "error": None,
     }
 
     try:
-        # 从基金交易页面抓取（最准确，包含具体限额金额）
         info = _fetch_from_trade_page(fund_code)
         if info:
             result.update(info)
@@ -65,19 +63,7 @@ def fetch_fund_purchase_info(fund_code: str) -> dict:
 
 
 def _fetch_from_trade_page(fund_code: str) -> Optional[dict]:
-    """
-    从天天基金交易页面抓取限购信息
-
-    页面关键 HTML 结构:
-    <title>大成纳斯达克100ETF联接(QDII)C(008971)基金净值...</title>
-    <div class="buyWayStatic">
-        <div class="staticItem">
-            <span class="itemTit">交易状态：</span>
-            <span class="staticCell">限大额  (<span>单日累计购买上限200.00元</span>)</span>
-            <span class="staticCell">开放赎回</span>
-        </div>
-    </div>
-    """
+    """从天天基金交易页面抓取限购信息和收益率"""
     url = FUND_TRADE_URL.format(code=fund_code)
     try:
         resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -88,20 +74,27 @@ def _fetch_from_trade_page(fund_code: str) -> Optional[dict]:
         html = resp.text
         info = {}
 
-        # 1. 从 <title> 提取基金名称（最可靠）
+        # 1. 从 <title> 提取基金名称
         title_match = re.search(r"<title>(.+?)\((\d{6})\)", html)
         if title_match:
             info["name"] = title_match.group(1).strip()
 
-        # 2. 从 buyWayStatic 区域提取交易状态和限额
-        # 提取交易状态区域的纯文本
+        # 2. 提取近1年收益率
+        # 页面中的格式: 近1年：</span><span class="...">34.44%</span>
+        return_match = re.search(
+            r"近1年[：:]</span>\s*<span[^>]*>([-\d.]+%)</span>",
+            html,
+        )
+        if return_match:
+            info["return_1y"] = return_match.group(1)
+
+        # 3. 从 buyWayStatic 区域提取交易状态和限额
         buy_section = re.search(
             r'class="buyWayStatic">(.*?)</div>\s*</div>\s*</div>',
             html,
             re.DOTALL,
         )
         if not buy_section:
-            # 备用：尝试匹配更宽泛的模式
             buy_section = re.search(
                 r'交易状态[：:](.*?)购买手续费',
                 html,
@@ -113,7 +106,7 @@ def _fetch_from_trade_page(fund_code: str) -> Optional[dict]:
             section_text = re.sub(r"\s+", " ", section_text).strip()
             info["raw_text"] = section_text[:200]
 
-            # 3. 解析交易状态
+            # 解析交易状态
             if "暂停申购" in section_text:
                 info["purchase_status"] = "暂停申购"
                 info["purchase_limit"] = "暂停"
@@ -123,8 +116,7 @@ def _fetch_from_trade_page(fund_code: str) -> Optional[dict]:
                 info["purchase_status"] = "开放申购"
                 info["purchase_limit"] = "不限"
 
-            # 4. 解析具体限额金额
-            # 匹配 "单日累计购买上限200.00元" 或类似模式
+            # 解析具体限额金额
             limit_patterns = [
                 r"单日累计购买上限([\d,.]+)元",
                 r"购买上限([\d,.]+)元",
@@ -144,7 +136,7 @@ def _fetch_from_trade_page(fund_code: str) -> Optional[dict]:
                     info["purchase_limit"] = amount
                     break
 
-        # 5. 如果上面没有匹配到，尝试从整个页面文本中提取
+        # 4. 备用：从整个页面文本提取
         if "purchase_status" not in info:
             page_text = re.sub(r"<[^>]+>", " ", html)
             page_text = re.sub(r"\s+", " ", page_text)
@@ -154,7 +146,6 @@ def _fetch_from_trade_page(fund_code: str) -> Optional[dict]:
                 info["purchase_limit"] = info.get("purchase_limit", "暂停")
             elif "限大额" in page_text:
                 info["purchase_status"] = "限大额"
-                # 尝试提取限额
                 for pattern in [
                     r"单日累计购买上限([\d,.]+)元",
                     r"购买上限([\d,.]+)元",
