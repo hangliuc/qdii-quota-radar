@@ -48,18 +48,63 @@ def _font(size: int) -> ImageFont.FreeTypeFont:
 
 
 # ── 工具函数 ──────────────────────────────────────
-_COMPANIES = [
-    "华泰柏瑞", "景顺长城", "易方达", "汇添富",
-    "大成", "广发", "国泰", "华安", "华夏", "南方", "天弘",
-    "嘉实", "博时", "招商", "摩根", "建信", "宝盈", "万家",
-]
+# ── 工具函数 ──────────────────────────────────────
 
 
-def _short_name(name: str) -> str:
-    for c in _COMPANIES:
-        if name.startswith(c):
-            return c
-    return name[:2]
+def _display_name(full_name: str) -> str:
+    """
+    从完整基金名称中提取适合卡片显示的简称。
+    
+    例：
+      "大成纳斯达克100ETF联接(QDII)C"          → "大成纳斯达克100C"
+      "易方达标普信息科技指数(QDII-LOF)A(人民币)" → "易方达标普信息科技A"
+      "华宝纳斯达克精选股票发起式(QDII)C"        → "华宝纳斯达克精选C"
+      "嘉实美国成长股票人民币"                    → "嘉实美国成长"
+      "国泰纳斯达克100指数"                      → "国泰纳斯达克100"
+    """
+    n = full_name
+    # 提取末尾的份额类型 A/C/E 等（在括号外的单个字母）
+    share_type = ""
+    m = re.search(r'[)）]\s*([A-Z])\s*$', n)
+    if m:
+        share_type = m.group(1)
+    elif re.search(r'[A-Z]\s*$', n):
+        # 末尾直接是字母，如 "...C"
+        share_type = n.strip()[-1]
+    # 也可能在括号里，如 "(QDII)C" 
+    if not share_type:
+        m = re.search(r'\(QDII[^)]*\)\s*([A-Z])', n)
+        if m:
+            share_type = m.group(1)
+
+    # 去掉各种后缀（按顺序多轮清理）
+    for pat in [
+        r'\(QDII[^)]*\)',       # (QDII), (QDII-LOF)
+        r'[（(][^)）]*[)）]',    # 其他括号内容
+        r'ETF发起式联接',
+        r'ETF发起联接',
+        r'ETF联接',
+        r'发起式联接',
+        r'发起联接',
+        r'联接',
+        r'发起式',
+        r'发起',
+        r'人民币',
+        r'量化选股',
+        r'[A-Z]$',              # 末尾份额字母
+        r'股票$',
+        r'混合$',
+        r'指数$',
+    ]:
+        n = re.sub(pat, '', n)
+
+    n = n.strip()
+
+    # 加回份额类型
+    if share_type:
+        n = f"{n}{share_type}"
+
+    return n
 
 
 def _limit_val(s: str) -> float:
@@ -132,7 +177,7 @@ def generate(results: list[dict], output_path: str,
     ROW_H, GAP, HDR_H, CR = 72, 32, 180, 24
     COL_HDR_H = 48
     IL, IR = PAD + CPAD, W - PAD - CPAD
-    COL_RET = 680  # 收益率列中心 x
+    COL_RET = 730  # 收益率列中心 x
 
     open_h = COL_HDR_H + len(opened) * ROW_H + 20
     susp_h = COL_HDR_H + len(suspended) * ROW_H + 20
@@ -143,7 +188,7 @@ def generate(results: list[dict], output_path: str,
 
     # 字体
     ft, fs, fsc, fch = _font(46), _font(26), _font(30), _font(22)
-    fn, fc, fl, fr = _font(30), _font(22), _font(34), _font(30)
+    fn, fc, fl, fr = _font(26), _font(22), _font(34), _font(28)
     fsn, fsl = _font(42), _font(22)
 
     y = PAD
@@ -186,23 +231,21 @@ def generate(results: list[dict], output_path: str,
         return y + h
 
     def _draw_row(d, ry, r, is_open):
-        nm = _short_name(r.get("name", ""))
-        code = r.get("code", "")
+        nm = r.get("display") or r.get("name", "")
         lim = _fmt_limit(r.get("purchase_limit", ""))
         ret = r.get("return_1y", "—") or "—"
 
-        d.text((IL, ry + 14), nm, fill=TEXT, font=fn)
-        nb = d.textbbox((0, 0), nm, font=fn)
-        d.text((IL + nb[2] - nb[0] + 12, ry + 20), code, fill=MUTED, font=fc)
+        # 基金名称（左侧）
+        d.text((IL, ry + 16), nm, fill=TEXT, font=fn)
 
-        # 收益率
+        # 收益率（居中对齐到列）
         rc = RED if ret != "—" and not ret.startswith("-") else (GREEN if ret.startswith("-") else MUTED)
         rb = d.textbbox((0, 0), ret, font=fr)
-        d.text((COL_RET - (rb[2] - rb[0]) // 2, ry + 14), ret, fill=rc, font=fr)
+        d.text((COL_RET - (rb[2] - rb[0]) // 2, ry + 16), ret, fill=rc, font=fr)
 
-        # 限额
+        # 限额（右对齐）
         lc = GREEN if is_open else RED
-        _right_text(d, IR, ry + 12, lim, fl, lc)
+        _right_text(d, IR, ry + 14, lim, fl, lc)
 
     y = _section(y, opened, "🟢 可申购", GREEN, True)
     y += GAP

@@ -132,6 +132,9 @@ def fetch_all(fund_list: list[dict]) -> list[dict]:
         info = fetch_one(code)
         if not info.get("name") or len(info["name"]) < 4:
             info["name"] = name
+        # 保留 config 中的 display 字段
+        if fund.get("display"):
+            info["display"] = fund["display"]
         results.append(info)
 
         if i < total - 1:
