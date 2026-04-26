@@ -76,8 +76,11 @@ def _parse_page(html: str) -> Optional[dict]:
 
     # 具体限额
     for pattern in [
+        r"单日累计购买上限([\d,.]+万)元",
         r"单日累计购买上限([\d,.]+)元",
+        r"购买上限([\d,.]+万)元",
         r"购买上限([\d,.]+)元",
+        r"限大额.*?上限.*?([\d,.]+万)\s*元",
         r"限大额.*?上限.*?([\d,.]+)\s*元",
         r"限大额.*?\((.*?元)\)",
         r"单日.*?限额.*?([\d,.]+)\s*元",
@@ -87,6 +90,10 @@ def _parse_page(html: str) -> Optional[dict]:
             amount = m.group(1).strip()
             info["purchase_limit"] = amount if "元" in amount else f"{amount}元"
             break
+
+    # 状态是限大额但没解析到具体金额
+    if info.get("purchase_status") == "限大额" and "purchase_limit" not in info:
+        info["purchase_limit"] = "限大额(金额未知)"
 
     if info.get("purchase_status") or info.get("name"):
         return info

@@ -108,16 +108,27 @@ def _display_name(full_name: str) -> str:
 
 
 def _limit_val(s: str) -> float:
+    """解析限额为数值（单位：元），用于排序"""
     if "不限" in (s or ""):
         return float("inf")
     if "暂停" in (s or ""):
         return -1
+    m = re.search(r"([\d,.]+)\s*万", s or "")
+    if m:
+        return float(m.group(1).replace(",", "")) * 10000
     m = re.search(r"([\d,.]+)", s or "")
     return float(m.group(1).replace(",", "")) if m else -2
 
 
 def _fmt_limit(s: str) -> str:
-    m = re.search(r"([\d,.]+)", s or "")
+    """格式化限额显示"""
+    # 万元单位
+    m = re.search(r"([\d,.]+)\s*万元", s or "")
+    if m:
+        v = float(m.group(1).replace(",", ""))
+        return f"{int(v)}万元" if v == int(v) else f"{v}万元"
+    # 元单位
+    m = re.search(r"([\d,.]+)\s*元", s or "")
     if m:
         v = float(m.group(1).replace(",", ""))
         return f"{int(v)}元" if v == int(v) else f"{v}元"
@@ -232,11 +243,15 @@ def generate(results: list[dict], output_path: str,
 
     def _draw_row(d, ry, r, is_open):
         nm = r.get("display") or r.get("name", "")
+        code = r.get("code", "")
         lim = _fmt_limit(r.get("purchase_limit", ""))
         ret = r.get("return_1y", "—") or "—"
 
-        # 基金名称（左侧）
+        # 基金名称
         d.text((IL, ry + 16), nm, fill=TEXT, font=fn)
+        # 基金代码（紧跟名称后面）
+        nb = d.textbbox((0, 0), nm, font=fn)
+        d.text((IL + nb[2] - nb[0] + 10, ry + 20), code, fill=MUTED, font=fc)
 
         # 收益率（居中对齐到列）
         rc = RED if ret != "—" and not ret.startswith("-") else (GREEN if ret.startswith("-") else MUTED)
