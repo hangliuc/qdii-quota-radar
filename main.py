@@ -37,6 +37,7 @@ def main():
     parser.add_argument("--fund-codes", nargs="+", help="只查询指定基金代码")
     parser.add_argument("--dry-run", action="store_true", help="只输出到控制台，不推送飞书")
     parser.add_argument("--no-image", action="store_true", help="不生成图片")
+    parser.add_argument("--no-notify", action="store_true", help="不发送飞书通知")
 
     args = parser.parse_args()
 
@@ -78,18 +79,24 @@ def main():
             print(changes_text)
 
     # 生成图片
-    image_path = None
+    image_url = ""
     if not args.no_image:
         image_dir = os.path.join(script_dir, "output")
-        image_path = os.path.join(
-            image_dir, f"fund_card_{datetime.now().strftime('%Y%m%d')}.png"
-        )
+        date_str = datetime.now().strftime("%Y%m%d")
+        image_name = f"fund_card_{date_str}.png"
+        image_path = os.path.join(image_dir, image_name)
         generate_card(results, image_path)
 
-    # 发送飞书提醒
-    webhook = "" if args.dry_run else config.get("feishu_webhook", "")
-    title, content = format_reminder()
-    send_notification(webhook, title, content)
+        # 构造 GitHub raw 图片链接（commit 后可访问）
+        repo = os.environ.get("GITHUB_REPOSITORY", "")
+        if repo:
+            image_url = f"https://raw.githubusercontent.com/{repo}/main/output/{image_name}"
+
+    # 发送飞书提醒（含图片链接）
+    if not args.no_notify:
+        webhook = "" if args.dry_run else config.get("feishu_webhook", "")
+        title, content = format_reminder(image_url)
+        send_notification(webhook, title, content)
 
     # 统计
     error_count = sum(1 for r in results if r.get("error"))
