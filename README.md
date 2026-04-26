@@ -43,6 +43,8 @@ python main.py --fund-codes 008971 019172
 main.py          入口
 fund_scraper.py  从天天基金网抓取限购信息
 notifier.py      飞书推送 & 报告格式化
+image_gen.py     生成小红书卡片图
 history.py       历史记录 & 变动检测
 config.json      基金列表 & webhook 配置
+output/          生成的图片（gitignore）
 ```

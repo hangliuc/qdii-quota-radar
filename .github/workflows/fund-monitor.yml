@@ -20,7 +20,9 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+          pip install -r requirements.txt
 
       - name: Run monitor
         env:

@@ -13,6 +13,7 @@ from datetime import datetime
 from fund_scraper import fetch_all_funds
 from notifier import send_notification, format_report
 from history import update_history, format_changes
+from image_gen import generate_card
 
 
 def load_config(config_path: str) -> dict:
@@ -37,6 +38,9 @@ def main():
     parser.add_argument("--fund-codes", nargs="+", help="只查询指定基金代码")
     parser.add_argument(
         "--dry-run", action="store_true", help="只输出到控制台，不推送飞书"
+    )
+    parser.add_argument(
+        "--no-image", action="store_true", help="不生成图片"
     )
 
     args = parser.parse_args()
@@ -89,6 +93,12 @@ def main():
     # 发送通知
     webhook = "" if args.dry_run else config.get("feishu_webhook", "")
     send_notification(webhook, title, content)
+
+    # 生成图片
+    if not args.no_image:
+        image_dir = os.path.join(script_dir, "output")
+        image_path = os.path.join(image_dir, f"fund_card_{datetime.now().strftime('%Y%m%d')}.png")
+        generate_card(results, image_path)
 
     # 统计
     error_count = sum(1 for r in results if r.get("error"))
