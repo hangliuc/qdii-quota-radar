@@ -1,0 +1,23 @@
+services:
+  # 定时抓取 + 生成图片 + 飞书通知
+  monitor:
+    build: .
+    container_name: fund-monitor
+    restart: unless-stopped
+    environment:
+      - FEISHU_WEBHOOK=${FEISHU_WEBHOOK}
+      - IMAGE_BASE_URL=${IMAGE_BASE_URL}
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./data:/app/data
+      - ./docs:/app/docs
+
+  # nginx 提供图片访问（飞书按钮链接指向这里）
+  nginx:
+    image: nginx:alpine
+    container_name: fund-images
+    restart: unless-stopped
+    ports:
+      - "8900:80"
+    volumes:
+      - ./docs:/usr/share/nginx/html:ro

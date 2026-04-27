@@ -1,16 +1,10 @@
-name: Alipay NASDAQ QDII Fund Monitor
+name: Fund Monitor (manual test only)
 
 on:
-  schedule:
-    # 每天北京时间 8:40 (UTC 0:40)
-    - cron: '40 0 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  monitor:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,16 +18,5 @@ jobs:
           sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
           pip install -r requirements.txt
 
-      - name: Scrape, generate images & send notification
-        env:
-          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
-          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
-        run: python main.py
-
-      - name: Commit & push
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add data/ docs/ || true
-          git diff --staged --quiet || git commit -m "chore: update $(date +%Y-%m-%d)"
-          git push || true
+      - name: Dry run
+        run: python main.py --dry-run

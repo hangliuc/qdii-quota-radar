@@ -9,7 +9,7 @@ from fund_monitor.config import Config
 from fund_monitor.scraper import fetch_all
 from fund_monitor.history import History
 from fund_monitor.image import generate
-from fund_monitor.notifier import FeishuNotifier, upload_to_imgbb
+from fund_monitor.notifier import FeishuNotifier
 
 IMAGE_DIR = "docs"
 
@@ -28,17 +28,7 @@ def main():
 
     date_str = datetime.now().strftime("%Y%m%d")
     image_dir = os.path.join(root, IMAGE_DIR)
-    image_paths = []  # 本地路径
-    image_urls = []   # 在线链接
-
-    # GitHub Pages 基础 URL（备用）
-    pages_base = ""
-    if config.github_repo:
-        owner, repo_name = config.github_repo.split("/")
-        pages_base = f"https://{owner}.github.io/{repo_name}"
-
-    # imgbb API key（优先使用，国内可访问）
-    imgbb_key = os.environ.get("IMGBB_API_KEY") or config.imgbb_api_key
+    image_urls = []
 
     # ── 被动型基金 ──
     if config.passive_funds:
@@ -51,11 +41,11 @@ def main():
 
         if not args.no_image:
             name = f"passive_{date_str}.png"
-            path = os.path.join(image_dir, name)
-            generate(results, path,
+            generate(results, os.path.join(image_dir, name),
                      title="纳斯达克被动型基金限购日报",
                      subtitle_prefix="指数基金 · C类份额")
-            image_paths.append(("passive", path, name))
+            if config.image_base_url:
+                image_urls.append(f"{config.image_base_url}/{name}")
 
     # ── 主动型基金 ──
     if config.active_funds:
@@ -68,25 +58,11 @@ def main():
 
         if not args.no_image:
             name = f"active_{date_str}.png"
-            path = os.path.join(image_dir, name)
-            generate(results, path,
+            generate(results, os.path.join(image_dir, name),
                      title="纳斯达克主动型基金限购日报",
                      subtitle_prefix="主动管理 QDII")
-            image_paths.append(("active", path, name))
-
-    # ── 上传图片 ──
-    for tag, path, name in image_paths:
-        url = ""
-        if imgbb_key:
-            try:
-                url = upload_to_imgbb(path, imgbb_key)
-                print(f"📤 {tag} 图片已上传: {url}")
-            except Exception as e:
-                print(f"⚠️ {tag} 图片上传失败: {e}")
-        if not url and pages_base:
-            url = f"{pages_base}/{name}"
-        if url:
-            image_urls.append(url)
+            if config.image_base_url:
+                image_urls.append(f"{config.image_base_url}/{name}")
 
     # ── 飞书通知 ──
     if not args.no_notify:

@@ -41,5 +41,5 @@
     {"code": "016665", "name": "天弘全球高端制造(QDII)C", "display": "天弘全球高端制造"}
   ],
   "history_file": "data/history.json",
-  "github_repo": "hangliuc/alipay-nasdaq-fund-monitor"
+  "image_base_url": ""
 }

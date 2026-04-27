@@ -1,57 +1,75 @@
 # 支付宝纳斯达克 QDII 基金监控
 
-每天自动抓取支付宝中纳斯达克相关 QDII 基金（被动型 & 主动型）的**限购额度、近1年收益率**等信息，生成小红书卡片图，推送到飞书。
+每天自动抓取支付宝中纳斯达克相关 QDII 基金的**限购额度、近1年收益率**，生成小红书卡片图，推送到飞书。
 
-数据源：天天基金网（东方财富）
+## 架构
 
-## 监控范围
+```
+服务器 (Docker)
+├── monitor 容器：cron 每天 8:40 执行抓取 + 生图 + 飞书通知
+└── nginx 容器：提供图片 HTTP 访问（飞书按钮链接）
 
-覆盖 18 家基金公司的纳斯达克 QDII 场外基金（仅统计 C 类份额，A/C 限额相同，C 类无申购费更适合短期持有）：
+GitHub Actions
+└── push to main → 自动 SSH 部署到服务器
+```
 
-大成 · 广发 · 国泰 · 华安 · 易方达 · 华夏 · 南方 · 天弘 · 景顺长城 · 嘉实 · 博时 · 招商 · 华泰柏瑞 · 摩根 · 汇添富 · 建信 · 宝盈 · 万家
+## 部署
 
-## 快速开始
+### 1. 配置 GitHub Secrets
+
+| Secret | 说明 |
+|--------|------|
+| `SERVER_HOST` | 服务器 IP |
+| `SERVER_USER` | SSH 用户名 |
+| `SSH_PRIVATE_KEY` | SSH 私钥 |
+
+### 2. 服务器环境变量
+
+在服务器 `/root/alipay-nasdaq-fund-monitor/` 下创建 `.env`：
+
+```bash
+FEISHU_WEBHOOK=https://open.feishu.cn/open-apis/bot/v2/hook/xxx
+IMAGE_BASE_URL=http://你的服务器IP:8900
+```
+
+### 3. 首次部署
+
+push 代码到 main 分支会自动部署。也可以手动：
+
+```bash
+ssh root@你的服务器
+cd /root/alipay-nasdaq-fund-monitor
+docker compose up -d
+```
+
+### 4. 手动测试
+
+```bash
+# 在服务器上
+docker exec fund-monitor python main.py --dry-run
+```
+
+## 本地开发
 
 ```bash
 pip install -r requirements.txt
-
-# 输出到控制台（不推飞书）
 python main.py --dry-run
-
-# 正常运行（推飞书 + 生成图片）
-python main.py
-
-# 只查指定基金
-python main.py --fund-codes 008971 019172
 ```
-
-## 配置
-
-编辑 `config.json`：
-- `feishu_webhook` — 飞书机器人 webhook 地址
-- `funds` — 要监控的基金列表
-- `github_repo` — GitHub 仓库路径（用于生成图片链接）
-
-## GitHub Actions
-
-每天北京时间 12:00 自动运行，也可手动触发。
-
-1. Fork 仓库
-2. Settings → Secrets → 添加 `FEISHU_WEBHOOK`
 
 ## 项目结构
 
 ```
 main.py                     入口
 fund_monitor/
-  ├── __init__.py
-  ├── cli.py                命令行解析 & 流程编排
+  ├── cli.py                流程编排
   ├── config.py             配置加载
   ├── scraper.py            天天基金数据抓取
   ├── history.py            历史记录 & 变动检测
   ├── image.py              小红书卡片图生成
   └── notifier.py           飞书通知
 config.json                 基金列表 & 配置
+Dockerfile                  容器镜像
+docker-compose.yml          编排（monitor + nginx）
+docs/                       生成的卡片图（nginx 托管）
 data/                       历史数据
-output/                     生成的卡片图
 ```
