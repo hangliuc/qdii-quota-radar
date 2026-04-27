@@ -11,12 +11,14 @@ from fund_monitor.history import History
 from fund_monitor.image import generate
 from fund_monitor.notifier import FeishuNotifier
 
+# 图片输出到 docs/ 目录，通过 GitHub Pages 提供国内可访问的链接
+IMAGE_DIR_NAME = "docs"
+
 
 def main():
     args = _parse_args()
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    # 1. 加载配置
     config_path = _resolve(root, args.config)
     try:
         config = Config.load(config_path)
@@ -26,10 +28,17 @@ def main():
         sys.exit(f"❌ 配置文件错误: {e}")
 
     date_str = datetime.now().strftime("%Y%m%d")
-    image_dir = os.path.join(root, "output")
+    image_dir = os.path.join(root, IMAGE_DIR_NAME)
     image_urls = []
 
-    # 2. 被动型基金（纳斯达克100指数）
+    # GitHub Pages 基础 URL
+    pages_base = ""
+    if config.github_repo:
+        repo_name = config.github_repo.split("/")[-1]
+        owner = config.github_repo.split("/")[0]
+        pages_base = f"https://{owner}.github.io/{repo_name}"
+
+    # 被动型基金
     if config.passive_funds:
         funds = _filter(config.passive_funds, args.fund_codes)
         print(f"🚀 被动型基金：查询 {len(funds)} 只...")
@@ -40,18 +49,13 @@ def main():
 
         if not args.no_image:
             name = f"passive_{date_str}.png"
-            generate(
-                results,
-                os.path.join(image_dir, name),
-                title="纳斯达克被动型基金限购日报",
-                subtitle_prefix="指数基金 · C类份额",
-            )
-            if config.github_repo:
-                image_urls.append(
-                    f"https://raw.githubusercontent.com/{config.github_repo}/main/output/{name}"
-                )
+            generate(results, os.path.join(image_dir, name),
+                     title="纳斯达克被动型基金限购日报",
+                     subtitle_prefix="指数基金 · C类份额")
+            if pages_base:
+                image_urls.append(f"{pages_base}/{name}")
 
-    # 3. 主动型基金
+    # 主动型基金
     if config.active_funds:
         funds = _filter(config.active_funds, args.fund_codes)
         print(f"\n🚀 主动型基金：查询 {len(funds)} 只...")
@@ -62,18 +66,13 @@ def main():
 
         if not args.no_image:
             name = f"active_{date_str}.png"
-            generate(
-                results,
-                os.path.join(image_dir, name),
-                title="纳斯达克主动型基金限购日报",
-                subtitle_prefix="主动管理 QDII",
-            )
-            if config.github_repo:
-                image_urls.append(
-                    f"https://raw.githubusercontent.com/{config.github_repo}/main/output/{name}"
-                )
+            generate(results, os.path.join(image_dir, name),
+                     title="纳斯达克主动型基金限购日报",
+                     subtitle_prefix="主动管理 QDII")
+            if pages_base:
+                image_urls.append(f"{pages_base}/{name}")
 
-    # 4. 发送飞书通知
+    # 飞书通知
     if not args.no_notify:
         webhook = "" if args.dry_run else config.feishu_webhook
         FeishuNotifier(webhook).send_reminder(image_urls)
@@ -81,7 +80,7 @@ def main():
     print("\n✅ 完成！")
 
 
-def _filter(funds: list[dict], codes) -> list[dict]:
+def _filter(funds, codes):
     if not codes:
         return funds
     return [f for f in funds if f["code"] in codes]
@@ -91,13 +90,11 @@ def _record_history(args, root, config, results, prefix):
     if args.no_history:
         return
     path = _resolve(root, config.history_file)
-    # 给不同类型用不同的 history key（同一个文件）
     history = History(path, namespace=prefix)
     changes = history.update(results)
     text = History.format_changes(changes)
     if text:
         print(text)
-
     errors = sum(1 for r in results if r.get("error"))
     if errors:
         print(f"  ⚠️ {errors} 只基金查询失败")
@@ -114,5 +111,5 @@ def _parse_args():
     return p.parse_args()
 
 
-def _resolve(root: str, path: str) -> str:
+def _resolve(root, path):
     return path if os.path.isabs(path) else os.path.join(root, path)
