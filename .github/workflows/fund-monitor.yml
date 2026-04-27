@@ -2,7 +2,7 @@ name: Alipay NASDAQ QDII Fund Monitor
 
 on:
   schedule:
-    # 先设为5分钟后测试（UTC时间），测试成功后改为 8:40 北京时间
+    # 每天北京时间 8:40 (UTC 0:40)
     - cron: '40 0 * * *'
   workflow_dispatch:
 
