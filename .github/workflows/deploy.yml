@@ -17,7 +17,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 项目目录
             APP_DIR=/root/alipay-nasdaq-fund-monitor
 
             # 首次部署：clone
@@ -26,12 +25,18 @@ jobs:
             fi
 
             cd $APP_DIR
-
-            # 拉取最新代码
             git fetch origin main
             git reset --hard origin/main
 
-            # 重建并启动容器
+            # 写入 .env（从 GitHub Secrets 注入，不进 git）
+            cat > .env << 'ENVEOF'
+            FEISHU_WEBHOOK=${{ secrets.FEISHU_WEBHOOK }}
+            IMAGE_BASE_URL=http://${{ secrets.SERVER_HOST }}:8900
+            ENVEOF
+            # 去掉行首空格
+            sed -i 's/^            //' .env
+
+            # 重建并启动
             docker compose down
             docker compose build --no-cache
             docker compose up -d
