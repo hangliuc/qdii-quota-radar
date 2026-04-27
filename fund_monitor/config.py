@@ -12,6 +12,7 @@ class Config:
     active_funds: list[dict] = field(default_factory=list)
     history_file: str = "data/history.json"
     github_repo: str = ""
+    imgbb_api_key: str = ""
 
     @classmethod
     def load(cls, path: str) -> "Config":
@@ -32,4 +33,5 @@ class Config:
             active_funds=raw.get("active_funds", []),
             history_file=raw.get("history_file", "data/history.json"),
             github_repo=raw.get("github_repo", ""),
+            imgbb_api_key=raw.get("imgbb_api_key", ""),
         )

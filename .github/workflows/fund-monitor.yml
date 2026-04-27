@@ -24,8 +24,11 @@ jobs:
           sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
           pip install -r requirements.txt
 
-      - name: Scrape & generate images
-        run: python main.py --no-notify
+      - name: Scrape, generate images & send notification
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+        run: python main.py
 
       - name: Commit & push
         run: |
@@ -33,19 +36,4 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add data/ docs/ || true
           git diff --staged --quiet || git commit -m "chore: update $(date +%Y-%m-%d)"
-          git push
-
-      - name: Send Feishu notification
-        env:
-          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
-        run: |
-          python -c "
-          import os
-          from datetime import datetime
-          from fund_monitor.notifier import FeishuNotifier
-          webhook = os.environ.get('FEISHU_WEBHOOK', '')
-          d = datetime.now().strftime('%Y%m%d')
-          base = 'https://hangliuc.github.io/alipay-nasdaq-fund-monitor'
-          urls = [f'{base}/passive_{d}.png', f'{base}/active_{d}.png']
-          FeishuNotifier(webhook).send_reminder(urls)
-          "
+          git push || true

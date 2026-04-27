@@ -10,8 +10,8 @@ class FeishuNotifier:
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
 
-    def send_reminder(self, image_urls: list[str] = None):
-        """发送每日提醒（含多张图片按钮）"""
+    def send_reminder(self, image_urls: list = None):
+        """发送每日提醒（含查看图片按钮）"""
         today = datetime.now().strftime("%Y-%m-%d")
         title = f"📊 纳斯达克基金限购日报 {today}"
 
@@ -76,3 +76,26 @@ class FeishuNotifier:
                 print(f"⚠️ 飞书 HTTP {resp.status_code}: {resp.text}")
         except Exception as e:
             print(f"⚠️ 飞书推送失败: {e}")
+
+
+def upload_to_imgbb(image_path: str, api_key: str) -> str:
+    """
+    上传图片到 imgbb，返回直链 URL。
+    imgbb 免费版支持匿名上传，国内可访问。
+
+    需要在 https://api.imgbb.com/ 注册获取免费 API key。
+    """
+    import base64
+    with open(image_path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode()
+
+    resp = requests.post(
+        "https://api.imgbb.com/1/upload",
+        data={"key": api_key, "image": b64},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    if data.get("success"):
+        return data["data"]["url"]
+    raise RuntimeError(f"imgbb upload failed: {data}")

@@ -9,10 +9,9 @@ from fund_monitor.config import Config
 from fund_monitor.scraper import fetch_all
 from fund_monitor.history import History
 from fund_monitor.image import generate
-from fund_monitor.notifier import FeishuNotifier
+from fund_monitor.notifier import FeishuNotifier, upload_to_imgbb
 
-# 图片输出到 docs/ 目录，通过 GitHub Pages 提供国内可访问的链接
-IMAGE_DIR_NAME = "docs"
+IMAGE_DIR = "docs"
 
 
 def main():
@@ -28,17 +27,20 @@ def main():
         sys.exit(f"❌ 配置文件错误: {e}")
 
     date_str = datetime.now().strftime("%Y%m%d")
-    image_dir = os.path.join(root, IMAGE_DIR_NAME)
-    image_urls = []
+    image_dir = os.path.join(root, IMAGE_DIR)
+    image_paths = []  # 本地路径
+    image_urls = []   # 在线链接
 
-    # GitHub Pages 基础 URL
+    # GitHub Pages 基础 URL（备用）
     pages_base = ""
     if config.github_repo:
-        repo_name = config.github_repo.split("/")[-1]
-        owner = config.github_repo.split("/")[0]
+        owner, repo_name = config.github_repo.split("/")
         pages_base = f"https://{owner}.github.io/{repo_name}"
 
-    # 被动型基金
+    # imgbb API key（优先使用，国内可访问）
+    imgbb_key = os.environ.get("IMGBB_API_KEY") or config.imgbb_api_key
+
+    # ── 被动型基金 ──
     if config.passive_funds:
         funds = _filter(config.passive_funds, args.fund_codes)
         print(f"🚀 被动型基金：查询 {len(funds)} 只...")
@@ -49,13 +51,13 @@ def main():
 
         if not args.no_image:
             name = f"passive_{date_str}.png"
-            generate(results, os.path.join(image_dir, name),
+            path = os.path.join(image_dir, name)
+            generate(results, path,
                      title="纳斯达克被动型基金限购日报",
                      subtitle_prefix="指数基金 · C类份额")
-            if pages_base:
-                image_urls.append(f"{pages_base}/{name}")
+            image_paths.append(("passive", path, name))
 
-    # 主动型基金
+    # ── 主动型基金 ──
     if config.active_funds:
         funds = _filter(config.active_funds, args.fund_codes)
         print(f"\n🚀 主动型基金：查询 {len(funds)} 只...")
@@ -66,13 +68,27 @@ def main():
 
         if not args.no_image:
             name = f"active_{date_str}.png"
-            generate(results, os.path.join(image_dir, name),
+            path = os.path.join(image_dir, name)
+            generate(results, path,
                      title="纳斯达克主动型基金限购日报",
                      subtitle_prefix="主动管理 QDII")
-            if pages_base:
-                image_urls.append(f"{pages_base}/{name}")
+            image_paths.append(("active", path, name))
 
-    # 飞书通知
+    # ── 上传图片 ──
+    for tag, path, name in image_paths:
+        url = ""
+        if imgbb_key:
+            try:
+                url = upload_to_imgbb(path, imgbb_key)
+                print(f"📤 {tag} 图片已上传: {url}")
+            except Exception as e:
+                print(f"⚠️ {tag} 图片上传失败: {e}")
+        if not url and pages_base:
+            url = f"{pages_base}/{name}"
+        if url:
+            image_urls.append(url)
+
+    # ── 飞书通知 ──
     if not args.no_notify:
         webhook = "" if args.dry_run else config.feishu_webhook
         FeishuNotifier(webhook).send_reminder(image_urls)
