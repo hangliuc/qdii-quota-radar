@@ -202,9 +202,9 @@ def generate(results: list[dict], output_path: str,
         # 限额
         _right_text(d, IR, ry + 14, lim, fl, GREEN if is_open else RED)
 
-    y = draw_section(y, opened, "🟢 可申购", GREEN, True)
+    y = draw_section(y, opened, "● 可申购", GREEN, True)
     y += GAP
-    draw_section(y, suspended, "🔴 暂停申购", RED, False)
+    draw_section(y, suspended, "● 暂停申购", RED, False)
 
     # ── 保存 ──
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
