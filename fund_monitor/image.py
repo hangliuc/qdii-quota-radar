@@ -129,32 +129,39 @@ def generate(results: list[dict], output_path: str,
 
     # ── 布局 ──
     W, PAD, CPAD = 1080, 60, 40
-    ROW_H, GAP, HDR_H, CR, COL_HDR_H = 72, 32, 180, 24, 48
+    ROW_H, GAP, HDR_H, CR, COL_HDR_H = 80, 36, 200, 24, 52
     IL, IR = PAD + CPAD, W - PAD - CPAD
-    COL_RET = 730
+    COL_RET = 700
 
-    open_h = COL_HDR_H + len(opened) * ROW_H + 20
-    susp_h = COL_HDR_H + len(suspended) * ROW_H + 20
-    H = PAD + HDR_H + 20 + 80 + 20 + open_h + GAP + susp_h + PAD
+    open_h = COL_HDR_H + len(opened) * ROW_H + 24
+    susp_h = COL_HDR_H + len(suspended) * ROW_H + 24
+    H = PAD + HDR_H + 24 + 88 + 24 + open_h + GAP + susp_h + PAD
 
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
 
     # ── 字体 ──
-    ft, fs, fsc, fch = _font(46), _font(26), _font(30), _font(22)
-    fn, fc, fl, fr = _font(26), _font(22), _font(34), _font(28)
-    fsn, fsl = _font(42), _font(22)
+    ft  = _font(48)   # 标题
+    fs  = _font(28)   # 副标题
+    fsc = _font(32)   # section 标题（可申购/暂停申购）
+    fch = _font(24)   # 列标题（近1年/限额）
+    fn  = _font(30)   # 基金名称
+    fc  = _font(24)   # 基金代码
+    fl  = _font(36)   # 限额数字
+    fr  = _font(30)   # 收益率数字
+    fsn = _font(44)   # 统计栏数字
+    fsl = _font(24)   # 统计栏标签
 
     y = PAD
 
     # ── 标题 ──
     _rounded_rect(d, (PAD, y, W - PAD, y + HDR_H), CR, TITLE_BG)
-    _center_text(d, W, y + 40, title, ft, TITLE_FG)
-    _center_text(d, W, y + 110, f"{subtitle_prefix} · {today}", fs, SUB_FG)
-    y += HDR_H + 20
+    _center_text(d, W, y + 45, title, ft, TITLE_FG)
+    _center_text(d, W, y + 120, f"{subtitle_prefix} · {today}", fs, SUB_FG)
+    y += HDR_H + 24
 
     # ── 统计栏 ──
-    _rounded_rect(d, (PAD, y, W - PAD, y + 80), 16, CARD)
+    _rounded_rect(d, (PAD, y, W - PAD, y + 88), 16, CARD)
     sw = (W - PAD * 2) // 3
     for i, (n, lb, co) in enumerate([
         (str(len(opened) + len(suspended)), "只基金", TEXT),
@@ -162,18 +169,18 @@ def generate(results: list[dict], output_path: str,
         (str(len(suspended)), "暂停中", RED),
     ]):
         cx = PAD + sw * i + sw // 2
-        _center_text(d, cx * 2, y + 6, n, fsn, co, absolute_center=cx)
-        _center_text(d, cx * 2, y + 50, lb, fsl, SUB_FG, absolute_center=cx)
-    y += 100
+        _center_text(d, cx * 2, y + 8, n, fsn, co, absolute_center=cx)
+        _center_text(d, cx * 2, y + 56, lb, fsl, SUB_FG, absolute_center=cx)
+    y += 112
 
     # ── 列表绘制 ──
     def draw_section(y, funds, label, color, is_open):
-        h = COL_HDR_H + len(funds) * ROW_H + 20
+        h = COL_HDR_H + len(funds) * ROW_H + 24
         _rounded_rect(d, (PAD, y, W - PAD, y + h), CR, CARD)
-        d.text((IL, y + 10), label, fill=color, font=fsc)
-        _right_text(d, IR, y + 14, "限额", fch, LABEL)
+        d.text((IL, y + 12), label, fill=color, font=fsc)
+        _right_text(d, IR, y + 16, "限额", fch, LABEL)
         bb = d.textbbox((0, 0), "近1年", font=fch)
-        d.text((COL_RET - (bb[2] - bb[0]) // 2, y + 14), "近1年", fill=LABEL, font=fch)
+        d.text((COL_RET - (bb[2] - bb[0]) // 2, y + 16), "近1年", fill=LABEL, font=fch)
 
         ry = y + COL_HDR_H
         for i, r in enumerate(funds):
@@ -190,17 +197,17 @@ def generate(results: list[dict], output_path: str,
         ret = r.get("return_1y", "—") or "—"
 
         # 名称 + 代码
-        d.text((IL, ry + 16), nm, fill=TEXT, font=fn)
+        d.text((IL, ry + 18), nm, fill=TEXT, font=fn)
         nb = d.textbbox((0, 0), nm, font=fn)
-        d.text((IL + nb[2] - nb[0] + 10, ry + 20), code, fill=MUTED, font=fc)
+        d.text((IL + nb[2] - nb[0] + 12, ry + 24), code, fill=MUTED, font=fc)
 
         # 收益率
         rc = RED if ret != "—" and not ret.startswith("-") else (GREEN if ret.startswith("-") else MUTED)
         rb = d.textbbox((0, 0), ret, font=fr)
-        d.text((COL_RET - (rb[2] - rb[0]) // 2, ry + 16), ret, fill=rc, font=fr)
+        d.text((COL_RET - (rb[2] - rb[0]) // 2, ry + 18), ret, fill=rc, font=fr)
 
         # 限额
-        _right_text(d, IR, ry + 14, lim, fl, GREEN if is_open else RED)
+        _right_text(d, IR, ry + 16, lim, fl, GREEN if is_open else RED)
 
     y = draw_section(y, opened, "● 可申购", GREEN, True)
     y += GAP
