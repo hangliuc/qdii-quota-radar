@@ -28,9 +28,10 @@ def main():
         sys.exit(f"❌ 配置文件错误: {e}")
 
     date_str = datetime.now().strftime("%Y%m%d")
-    suffix = uuid.uuid4().hex[:6]  # 随机后缀，防缓存
+    suffix = uuid.uuid4().hex[:6]
     image_dir = os.path.join(root, IMAGE_DIR)
     image_urls = []
+    all_changes = []  # 收集所有变化
 
     # ── 被动型基金 ──
     if config.passive_funds:
@@ -39,7 +40,8 @@ def main():
         print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
         results = fetch_all(funds)
-        _record_history(args, root, config, results, "passive")
+        changes = _record_history(args, root, config, results, "passive")
+        all_changes.extend(changes)
 
         if not args.no_image:
             name = f"passive_{date_str}_{suffix}.png"
@@ -56,7 +58,8 @@ def main():
         print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
         results = fetch_all(funds)
-        _record_history(args, root, config, results, "active")
+        changes = _record_history(args, root, config, results, "active")
+        all_changes.extend(changes)
 
         if not args.no_image:
             name = f"active_{date_str}_{suffix}.png"
@@ -69,7 +72,8 @@ def main():
     # ── 飞书通知 ──
     if not args.no_notify:
         webhook = "" if args.dry_run else config.feishu_webhook
-        FeishuNotifier(webhook).send_reminder(image_urls)
+        changes_text = History.format_changes_for_feishu(all_changes)
+        FeishuNotifier(webhook).send_reminder(image_urls, changes_text)
 
     print("\n✅ 完成！")
 
@@ -81,8 +85,9 @@ def _filter(funds, codes):
 
 
 def _record_history(args, root, config, results, prefix):
+    """记录历史并返回变化列表"""
     if args.no_history:
-        return
+        return []
     path = _resolve(root, config.history_file)
     history = History(path, namespace=prefix)
     changes = history.update(results)
@@ -92,6 +97,7 @@ def _record_history(args, root, config, results, prefix):
     errors = sum(1 for r in results if r.get("error"))
     if errors:
         print(f"  ⚠️ {errors} 只基金查询失败")
+    return changes
 
 
 def _parse_args():

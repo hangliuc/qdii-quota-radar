@@ -65,6 +65,7 @@ class History:
 
     @staticmethod
     def format_changes(changes: list[dict]) -> Optional[str]:
+        """格式化变化信息（控制台打印用）"""
         if not changes:
             return None
         lines = ["📢 限购额度变化：", ""]
@@ -74,5 +75,31 @@ class History:
                 lines.append(f"    状态: {c['old_status']} → {c['new_status']}")
             if c["old_limit"] != c["new_limit"]:
                 lines.append(f"    额度: {c['old_limit']} → {c['new_limit']}")
+            lines.append("")
+        return "\n".join(lines)
+
+    @staticmethod
+    def format_changes_for_feishu(all_changes: list[dict]) -> Optional[str]:
+        """
+        格式化变化信息（飞书推送用，可直接复制到小红书文案）
+
+        Args:
+            all_changes: 所有变化列表（被动+主动合并）
+        """
+        if not all_changes:
+            return None
+        today = datetime.now().strftime("%-m.%-d")
+        lines = [
+            f"（{today}）纳指主动基、被动基限额更新！",
+            "",
+            "📢 限购额度变化：",
+            "",
+        ]
+        for c in all_changes:
+            lines.append(f"{c['name']}({c['code']}):")
+            if c["old_status"] != c["new_status"]:
+                lines.append(f"  状态: {c['old_status']} → {c['new_status']}")
+            if c["old_limit"] != c["new_limit"]:
+                lines.append(f"  额度: {c['old_limit']} → {c['new_limit']}")
             lines.append("")
         return "\n".join(lines)

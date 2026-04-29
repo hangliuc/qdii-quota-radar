@@ -8,8 +8,12 @@ class FeishuNotifier:
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
 
-    def send_reminder(self, image_urls: list = None):
-        """发送每日提醒（含查看图片按钮）"""
+    def send_reminder(self, image_urls: list = None, changes_text: str = None):
+        """
+        发送每日提醒：
+        - 卡片图按钮
+        - 如果有额度变化，附带可复制的小红书文案
+        """
         today = datetime.now().strftime("%Y-%m-%d")
         title = f"📊 纳斯达克基金限购日报 {today}"
 
@@ -17,6 +21,7 @@ class FeishuNotifier:
             {"tag": "markdown", "content": "今日限购卡片已生成，记得发小红书 📕"},
         ]
 
+        # 图片按钮
         buttons = []
         for url in (image_urls or []):
             if "passive" in url:
@@ -31,9 +36,16 @@ class FeishuNotifier:
                 "type": "primary",
                 "url": url,
             })
-
         if buttons:
             elements.append({"tag": "action", "actions": buttons})
+
+        # 额度变化文案（可直接复制到小红书）
+        if changes_text:
+            elements.append({"tag": "hr"})
+            elements.append({
+                "tag": "markdown",
+                "content": changes_text,
+            })
 
         self._send_card(title, elements)
 
@@ -49,6 +61,8 @@ class FeishuNotifier:
                 elif el.get("tag") == "action":
                     for btn in el.get("actions", []):
                         print(f"  🔗 {btn['text']['content']} → {btn.get('url', '')}")
+                elif el.get("tag") == "hr":
+                    print("-" * 40)
             print(f"{'=' * 60}\n")
             return
 
