@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+import uuid
 from datetime import datetime
 
 from fund_monitor.config import Config
@@ -27,6 +28,7 @@ def main():
         sys.exit(f"❌ 配置文件错误: {e}")
 
     date_str = datetime.now().strftime("%Y%m%d")
+    suffix = uuid.uuid4().hex[:6]  # 随机后缀，防缓存
     image_dir = os.path.join(root, IMAGE_DIR)
     image_urls = []
 
@@ -40,7 +42,7 @@ def main():
         _record_history(args, root, config, results, "passive")
 
         if not args.no_image:
-            name = f"passive_{date_str}.png"
+            name = f"passive_{date_str}_{suffix}.png"
             generate(results, os.path.join(image_dir, name),
                      title="纳斯达克被动型基金限购日报",
                      subtitle_prefix="指数基金 · C类份额")
@@ -57,7 +59,7 @@ def main():
         _record_history(args, root, config, results, "active")
 
         if not args.no_image:
-            name = f"active_{date_str}.png"
+            name = f"active_{date_str}_{suffix}.png"
             generate(results, os.path.join(image_dir, name),
                      title="纳斯达克主动型基金限购日报",
                      subtitle_prefix="主动管理 QDII")
