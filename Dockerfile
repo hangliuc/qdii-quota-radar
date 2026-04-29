@@ -1,8 +1,12 @@
 FROM python:3.11-slim
 
-# 安装中文字体
+# 安装中文字体（思源黑体 Medium，效果接近 macOS STHeiti Medium）
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends fonts-noto-cjk cron && \
+    apt-get install -y --no-install-recommends cron wget fontconfig && \
+    mkdir -p /usr/share/fonts/custom && \
+    wget -q -O /usr/share/fonts/custom/SourceHanSansSC-Medium.otf \
+      "https://github.com/adobe-fonts/source-han-sans/raw/release/OTF/SimplifiedChinese/SourceHanSansSC-Medium.otf" && \
+    fc-cache -f && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

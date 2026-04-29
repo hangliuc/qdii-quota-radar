@@ -23,12 +23,14 @@ LABEL    = "#64748B"
 
 # ── 字体 ──────────────────────────────────────────
 _FONT_PATHS = [
+    # Docker（思源黑体 Medium，接近 macOS STHeiti Medium）
+    "/usr/share/fonts/custom/SourceHanSansSC-Medium.otf",
     # macOS
     "/System/Library/Fonts/STHeiti Medium.ttc",
     "/System/Library/Fonts/Hiragino Sans GB.ttc",
     "/Library/Fonts/Arial Unicode.ttf",
     "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
-    # Linux (Docker)
+    # Linux fallback
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
