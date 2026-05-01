@@ -9,3 +9,4 @@ build/
 output/
 .vscode/
 .DS_Store
+docs/*.png
