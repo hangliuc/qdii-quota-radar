@@ -1,13 +1,13 @@
 FROM python:3.11-slim
 
-# 安装中文字体（思源黑体 Medium，效果接近 macOS STHeiti Medium）
+# 安装 cron + 字体工具，使用与 macOS 相同的 STHeiti Medium 字体
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends cron wget fontconfig && \
+    apt-get install -y --no-install-recommends cron fontconfig && \
     mkdir -p /usr/share/fonts/custom && \
-    wget -q -O /usr/share/fonts/custom/SourceHanSansSC-Medium.otf \
-      "https://github.com/adobe-fonts/source-han-sans/raw/release/OTF/SimplifiedChinese/SourceHanSansSC-Medium.otf" && \
-    fc-cache -f && \
     rm -rf /var/lib/apt/lists/*
+
+COPY fonts/STHeiti-Medium.ttc /usr/share/fonts/custom/STHeiti-Medium.ttc
+RUN fc-cache -f
 
 WORKDIR /app
 
