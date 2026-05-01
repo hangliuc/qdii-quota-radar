@@ -1,7 +1,6 @@
 """
 卡片图生成
 生成适合小红书发布的竖版基金限购信息卡片（含近1年收益率）
-小红书最佳比例: 3:4 (1080×1440) 或 2:3 (1080×1620)
 """
 
 import re
@@ -123,50 +122,41 @@ def generate(results: list[dict], output_path: str,
 
     today = datetime.now().strftime("%Y-%m-%d")
 
-    # ── 布局（针对小红书优化，目标比例 ≈ 3:4） ──
-    W       = 1080       # 小红书标准宽度
-    PAD     = 36         # 外边距（60→36）
-    CPAD    = 36         # 卡片内边距（40→36）
-    ROW_H   = 64         # 行高（80→64，更紧凑）
-    GAP     = 20         # 两个 section 间距（36→20）
-    HDR_H   = 148        # 标题区高度（200→148）
-    CR      = 20         # 圆角半径（24→20）
-    COL_HDR_H = 44       # 列头高度（52→44）
-    STAT_H  = 76         # 统计栏高度（88→76）
-    CARD_PAD = 16        # 卡片底部内边距（24→16）
-
+    # ── 布局 ──
+    W, PAD, CPAD = 1080, 60, 40
+    ROW_H, GAP, HDR_H, CR, COL_HDR_H = 80, 36, 200, 24, 52
     IL, IR = PAD + CPAD, W - PAD - CPAD
-    COL_RET = 690        # 收益率列中心（700→690，微调）
+    COL_RET = 700
 
-    open_h = COL_HDR_H + len(opened) * ROW_H + CARD_PAD
-    susp_h = COL_HDR_H + len(suspended) * ROW_H + CARD_PAD
-    H = PAD + HDR_H + 14 + STAT_H + 14 + open_h + GAP + susp_h + PAD
+    open_h = COL_HDR_H + len(opened) * ROW_H + 24
+    susp_h = COL_HDR_H + len(suspended) * ROW_H + 24
+    H = PAD + HDR_H + 24 + 88 + 24 + open_h + GAP + susp_h + PAD
 
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
 
-    # ── 字体（整体缩小 2-4px，适配紧凑行高） ──
-    ft  = _font(44)   # 标题（48→44）
-    fs  = _font(26)   # 副标题（28→26）
-    fsc = _font(30)   # section 标题（32→30）
-    fch = _font(22)   # 列标题（24→22）
-    fn  = _font(28)   # 基金名称（30→28）
-    fc  = _font(22)   # 基金代码（24→22）
-    fl  = _font(32)   # 限额数字（36→32）
-    fr  = _font(28)   # 收益率数字（30→28）
-    fsn = _font(40)   # 统计栏数字（44→40）
-    fsl = _font(22)   # 统计栏标签（24→22）
+    # ── 字体 ──
+    ft  = _font(48)   # 标题
+    fs  = _font(28)   # 副标题
+    fsc = _font(32)   # section 标题（可申购/暂停申购）
+    fch = _font(24)   # 列标题（近1年/限额）
+    fn  = _font(30)   # 基金名称
+    fc  = _font(24)   # 基金代码
+    fl  = _font(36)   # 限额数字
+    fr  = _font(30)   # 收益率数字
+    fsn = _font(44)   # 统计栏数字
+    fsl = _font(24)   # 统计栏标签
 
     y = PAD
 
     # ── 标题 ──
     _rounded_rect(d, (PAD, y, W - PAD, y + HDR_H), CR, TITLE_BG)
-    _center_text(d, W, y + 34, title, ft, TITLE_FG)
-    _center_text(d, W, y + 96, f"{subtitle_prefix} · {today}", fs, SUB_FG)
-    y += HDR_H + 14
+    _center_text(d, W, y + 45, title, ft, TITLE_FG)
+    _center_text(d, W, y + 120, f"{subtitle_prefix} · {today}", fs, SUB_FG)
+    y += HDR_H + 24
 
     # ── 统计栏 ──
-    _rounded_rect(d, (PAD, y, W - PAD, y + STAT_H), 14, CARD)
+    _rounded_rect(d, (PAD, y, W - PAD, y + 88), 16, CARD)
     sw = (W - PAD * 2) // 3
     for i, (n, lb, co) in enumerate([
         (str(len(opened) + len(suspended)), "只基金", TEXT),
@@ -174,18 +164,18 @@ def generate(results: list[dict], output_path: str,
         (str(len(suspended)), "暂停中", RED),
     ]):
         cx = PAD + sw * i + sw // 2
-        _center_text(d, cx * 2, y + 6, n, fsn, co, absolute_center=cx)
-        _center_text(d, cx * 2, y + 48, lb, fsl, SUB_FG, absolute_center=cx)
-    y += STAT_H + 14
+        _center_text(d, cx * 2, y + 8, n, fsn, co, absolute_center=cx)
+        _center_text(d, cx * 2, y + 56, lb, fsl, SUB_FG, absolute_center=cx)
+    y += 112
 
     # ── 列表绘制 ──
     def draw_section(y, funds, label, color, is_open):
-        h = COL_HDR_H + len(funds) * ROW_H + CARD_PAD
+        h = COL_HDR_H + len(funds) * ROW_H + 24
         _rounded_rect(d, (PAD, y, W - PAD, y + h), CR, CARD)
-        d.text((IL, y + 10), label, fill=color, font=fsc)
-        _right_text(d, IR, y + 14, "限额", fch, LABEL)
+        d.text((IL, y + 12), label, fill=color, font=fsc)
+        _right_text(d, IR, y + 16, "限额", fch, LABEL)
         bb = d.textbbox((0, 0), "近1年", font=fch)
-        d.text((COL_RET - (bb[2] - bb[0]) // 2, y + 14), "近1年", fill=LABEL, font=fch)
+        d.text((COL_RET - (bb[2] - bb[0]) // 2, y + 16), "近1年", fill=LABEL, font=fch)
 
         ry = y + COL_HDR_H
         for i, r in enumerate(funds):
@@ -201,24 +191,18 @@ def generate(results: list[dict], output_path: str,
         lim = _fmt_limit(r.get("purchase_limit", ""))
         ret = r.get("return_1y", "—") or "—"
 
-        # 垂直居中偏移
-        text_y = ry + (ROW_H - 28) // 2  # 基于名称字号居中
-        code_y = text_y + 4               # 代码略偏下对齐基线
-        limit_y = ry + (ROW_H - 32) // 2  # 基于限额字号居中
-        ret_y = text_y                     # 收益率与名称对齐
-
         # 名称 + 代码
-        d.text((IL, text_y), nm, fill=TEXT, font=fn)
+        d.text((IL, ry + 18), nm, fill=TEXT, font=fn)
         nb = d.textbbox((0, 0), nm, font=fn)
-        d.text((IL + nb[2] - nb[0] + 10, code_y), code, fill=MUTED, font=fc)
+        d.text((IL + nb[2] - nb[0] + 12, ry + 24), code, fill=MUTED, font=fc)
 
         # 收益率
         rc = RED if ret != "—" and not ret.startswith("-") else (GREEN if ret.startswith("-") else MUTED)
         rb = d.textbbox((0, 0), ret, font=fr)
-        d.text((COL_RET - (rb[2] - rb[0]) // 2, ret_y), ret, fill=rc, font=fr)
+        d.text((COL_RET - (rb[2] - rb[0]) // 2, ry + 18), ret, fill=rc, font=fr)
 
         # 限额
-        _right_text(d, IR, limit_y, lim, fl, GREEN if is_open else RED)
+        _right_text(d, IR, ry + 16, lim, fl, GREEN if is_open else RED)
 
     y = draw_section(y, opened, "可申购", GREEN, True)
     y += GAP
@@ -227,5 +211,5 @@ def generate(results: list[dict], output_path: str,
     # ── 保存 ──
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     img.save(output_path, "PNG", quality=95)
-    print(f"📸 卡片已生成: {output_path}  ({W}×{H}, 比例 {H/W:.2f})")
+    print(f"📸 卡片已生成: {output_path}")
     return output_path
