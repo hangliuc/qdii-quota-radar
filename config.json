@@ -38,8 +38,7 @@
     {"code": "017204", "name": "华宝海外科技(QDII-LOF)C", "display": "华宝海外科技"},
     {"code": "008254", "name": "华宝致远混合(QDII)C", "display": "华宝致远混合"},
     {"code": "017093", "name": "景顺长城纳斯达克科技(QDII)C", "display": "景顺长城纳斯达克科技"},
-    {"code": "016665", "name": "天弘全球高端制造(QDII)C", "display": "天弘全球高端制造"},
-    {"code": "022184", "name": "富国全球科技互联网(QDII)C", "display": "富国全球科技互联网"}
+    {"code": "016665", "name": "天弘全球高端制造(QDII)C", "display": "天弘全球高端制造"}
   ],
   "history_file": "data/history.json",
   "image_base_url": ""
