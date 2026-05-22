@@ -102,6 +102,35 @@ def _right_text(d, right_x, y, text, font, fill):
     d.text((right_x - (bb[2] - bb[0]), y), text, fill=fill, font=font)
 
 
+def _add_watermark(img: Image.Image, text: str = "纳指心理按摩师") -> Image.Image:
+    """
+    在图片中部偏上位置叠加一条斜向半透明防伪水印。
+    选择中部位置（约 45% 高度）是为了避免被顶/底截图剪裁掉，
+    同时透明度较低，不会干扰主体内容阅读。
+    """
+    W, H = img.size
+    f = _font(80)
+
+    # 在独立画布上渲染文字，然后旋转
+    tmp = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
+    bb = ImageDraw.Draw(tmp).textbbox((0, 0), text, font=f)
+    tw, th = bb[2] - bb[0], bb[3] - bb[1]
+
+    wm = Image.new("RGBA", (tw + 60, th + 60), (0, 0, 0, 0))
+    wd = ImageDraw.Draw(wm)
+    # 深灰 + 低透明度，叠加在白色卡片或浅灰背景上都清晰可辨
+    wd.text((30, 30), text, font=f, fill=(30, 30, 50, 56))
+    wm = wm.rotate(-22, expand=True, resample=Image.BICUBIC)
+
+    # 透明图层用于合成
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    px = (W - wm.width) // 2
+    py = int(H * 0.45) - wm.height // 2  # 垂直 45% 处，居中略偏上
+    layer.paste(wm, (px, py), wm)
+
+    return Image.alpha_composite(img.convert("RGBA"), layer).convert("RGB")
+
+
 # ── 主函数 ────────────────────────────────────────
 
 def generate(results: list[dict], output_path: str,
@@ -207,6 +236,9 @@ def generate(results: list[dict], output_path: str,
     y = draw_section(y, opened, "可申购", GREEN, True)
     y += GAP
     draw_section(y, suspended, "暂停申购", RED, False)
+
+    # ── 防伪水印 ──
+    img = _add_watermark(img)
 
     # ── 保存 ──
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
