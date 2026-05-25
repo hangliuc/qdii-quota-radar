@@ -59,15 +59,15 @@ def _limit_val(s: str) -> float:
 
 
 def _fmt_limit(s: str) -> str:
-    """格式化限额显示"""
+    """格式化限额显示（卡片中只展示数字，省略单位"元"）"""
     m = re.search(r"([\d,.]+)\s*万元", s or "")
     if m:
         v = float(m.group(1).replace(",", ""))
-        return f"{int(v)}万元" if v == int(v) else f"{v}万元"
+        return f"{int(v)}万" if v == int(v) else f"{v}万"
     m = re.search(r"([\d,.]+)\s*元", s or "")
     if m:
         v = float(m.group(1).replace(",", ""))
-        return f"{int(v)}元" if v == int(v) else f"{v}元"
+        return f"{int(v)}" if v == int(v) else f"{v}"
     if "不限" in (s or ""):
         return "不限"
     if "暂停" in (s or ""):
