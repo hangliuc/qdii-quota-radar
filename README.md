@@ -10,6 +10,7 @@
 - 卡片内容：基金名称、代码、近1年收益率、当日限购额度，按限额从大到小排序
 - 限购额度变化自动检测，飞书推送时附带可复制的小红书文案
 - 历史数据保留最近 30 天
+- **节假日/周末自动跳过**（基于 `chinese_calendar`，含调休判断）
 
 数据来源：[天天基金网](https://fund.eastmoney.com/)
 
@@ -40,7 +41,8 @@ fund_monitor/
 ├── scraper.py              天天基金网数据抓取（限购状态 + 近1年收益率）
 ├── history.py              历史记录 & 额度变动检测（JSON 存储，保留30天）
 ├── image.py                小红书卡片图生成（Pillow，1080px 宽）
-└── notifier.py             飞书 Webhook 卡片消息推送
+├── notifier.py             飞书 Webhook 卡片消息推送
+└── trading_day.py          交易日判断（周末 + 中国法定节假日 + 调休）
 config.json                 基金列表 & 配置
 fonts/                      字体文件（STHeiti Medium，确保跨平台渲染一致）
 Dockerfile                  容器镜像（Python 3.11 + cron + 中文字体）
@@ -106,6 +108,7 @@ python main.py --dry-run --no-history
 | `--no-image` | 不生成卡片图 |
 | `--no-notify` | 不发送任何通知 |
 | `--no-history` | 不记录历史数据 |
+| `--force` | 强制运行（忽略节假日/周末检查） |
 | `--fund-codes` | 只查询指定基金代码 |
 | `--config` | 指定配置文件路径（默认 config.json） |
 

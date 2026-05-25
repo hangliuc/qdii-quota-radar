@@ -11,6 +11,7 @@ from fund_monitor.scraper import fetch_all
 from fund_monitor.history import History
 from fund_monitor.image import generate
 from fund_monitor.notifier import FeishuNotifier
+from fund_monitor.trading_day import is_trading_day
 
 IMAGE_DIR = "docs"
 
@@ -18,6 +19,14 @@ IMAGE_DIR = "docs"
 def main():
     args = _parse_args()
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # 非交易日跳过（周末 + 中国法定节假日，含调休）
+    if not args.force:
+        ok, reason = is_trading_day()
+        if not ok:
+            print(f"📅 {reason}，支付宝非交易日，跳过日报生成和飞书推送。")
+            print("   如需强制运行，使用 --force 参数。")
+            return
 
     config_path = _resolve(root, args.config)
     try:
@@ -108,6 +117,7 @@ def _parse_args():
     p.add_argument("--no-history", action="store_true", help="不记录历史")
     p.add_argument("--no-image", action="store_true", help="不生成图片")
     p.add_argument("--no-notify", action="store_true", help="不发送通知")
+    p.add_argument("--force", action="store_true", help="强制运行（忽略节假日/周末检查）")
     return p.parse_args()
 
 
