@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-05-26
+
+- **feat**: 飞书支持多 webhook 推送，新增 `feishu_webhooks` 配置数组（与 env 注入的 `FEISHU_WEBHOOK` 合并去重）
+- **style**: 卡片水印从"纳指心理按摩师"改为"HRuning"
+
 ## 2026-05-25
 
 - **feat**: 节假日（周末 + 中国法定节假日，含调休）自动跳过日报生成和飞书推送，新增 `--force` 参数支持强制运行

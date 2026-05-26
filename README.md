@@ -122,6 +122,7 @@ python main.py --dry-run --no-history
 | `active_funds` | 主动型基金列表（主动管理 QDII） |
 | `history_file` | 历史数据文件路径 |
 | `feishu_webhook` | 飞书 Webhook（建议通过环境变量 `FEISHU_WEBHOOK` 注入） |
+| `feishu_webhooks` | 额外的飞书 Webhook 列表（与 `feishu_webhook` 合并去重，支持同时推送多个机器人/群） |
 | `image_base_url` | 图片访问基础 URL（建议通过环境变量 `IMAGE_BASE_URL` 注入） |
 
 每只基金的 `display` 字段控制卡片上显示的简称。

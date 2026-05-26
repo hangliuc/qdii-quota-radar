@@ -102,7 +102,7 @@ def _right_text(d, right_x, y, text, font, fill):
     d.text((right_x - (bb[2] - bb[0]), y), text, fill=fill, font=font)
 
 
-def _add_watermark(img: Image.Image, text: str = "纳指心理按摩师") -> Image.Image:
+def _add_watermark(img: Image.Image, text: str = "HRuning") -> Image.Image:
     """
     在图片中部偏上位置叠加一条斜向半透明防伪水印。
     选择中部位置（约 45% 高度）是为了避免被顶/底截图剪裁掉，

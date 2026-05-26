@@ -1,5 +1,8 @@
 {
   "feishu_webhook": "",
+  "feishu_webhooks": [
+    "https://open.feishu.cn/open-apis/bot/v2/hook/a9a0cef3-45ba-4477-9bc3-67874a8481ac"
+  ],
   "passive_funds": [
     {"code": "008971", "name": "大成纳斯达克100ETF联接(QDII)C", "display": "大成纳斯达克100"},
     {"code": "160213", "name": "国泰纳斯达克100指数(QDII)", "display": "国泰纳斯达克100"},

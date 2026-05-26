@@ -80,9 +80,9 @@ def main():
 
     # ── 飞书通知 ──
     if not args.no_notify:
-        webhook = "" if args.dry_run else config.feishu_webhook
+        webhooks = [] if args.dry_run else config.all_webhooks
         changes_text = History.format_changes_for_feishu(all_changes)
-        FeishuNotifier(webhook).send_reminder(image_urls, changes_text)
+        FeishuNotifier(webhooks).send_reminder(image_urls, changes_text)
 
     print("\n✅ 完成！")
 

@@ -2,11 +2,19 @@
 
 import requests
 from datetime import datetime
+from typing import Union
 
 
 class FeishuNotifier:
-    def __init__(self, webhook_url: str):
-        self.webhook_url = webhook_url
+    def __init__(self, webhook_urls: Union[str, list[str], None]):
+        """
+        Args:
+            webhook_urls: 单个 URL 字符串或 URL 列表；空字符串/空列表会回退到控制台
+        """
+        if isinstance(webhook_urls, str):
+            self.webhook_urls = [webhook_urls] if webhook_urls else []
+        else:
+            self.webhook_urls = [w for w in (webhook_urls or []) if w]
 
     def send_reminder(self, image_urls: list = None, changes_text: str = None):
         """
@@ -50,7 +58,7 @@ class FeishuNotifier:
         self._send_card(title, elements)
 
     def _send_card(self, title: str, elements: list):
-        if not self.webhook_url:
+        if not self.webhook_urls:
             print(f"⚠️ 飞书 webhook 未配置，回退到控制台")
             print(f"\n{'=' * 60}")
             print(f"📢 {title}")
@@ -76,15 +84,18 @@ class FeishuNotifier:
                 "elements": elements,
             },
         }
-        try:
-            resp = requests.post(self.webhook_url, json=data, timeout=10)
-            if resp.status_code == 200:
-                body = resp.json()
-                if body.get("code") == 0 or body.get("StatusCode") == 0:
-                    print("✅ 飞书推送成功")
+
+        for i, url in enumerate(self.webhook_urls, 1):
+            tag = f"[#{i}]" if len(self.webhook_urls) > 1 else ""
+            try:
+                resp = requests.post(url, json=data, timeout=10)
+                if resp.status_code == 200:
+                    body = resp.json()
+                    if body.get("code") == 0 or body.get("StatusCode") == 0:
+                        print(f"✅ 飞书推送成功 {tag}".rstrip())
+                    else:
+                        print(f"⚠️ 飞书返回错误 {tag}: {body}".rstrip())
                 else:
-                    print(f"⚠️ 飞书返回错误: {body}")
-            else:
-                print(f"⚠️ 飞书 HTTP {resp.status_code}: {resp.text}")
-        except Exception as e:
-            print(f"⚠️ 飞书推送失败: {e}")
+                    print(f"⚠️ 飞书 HTTP {resp.status_code} {tag}: {resp.text}".rstrip())
+            except Exception as e:
+                print(f"⚠️ 飞书推送失败 {tag}: {e}".rstrip())
