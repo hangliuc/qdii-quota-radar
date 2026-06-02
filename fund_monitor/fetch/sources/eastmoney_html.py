@@ -1,6 +1,13 @@
 """
-基金数据抓取
-从天天基金网获取限购额度、近1年收益率等信息
+备用数据源：天天基金 HTML 详情页
+
+接口：http://fund.eastmoney.com/{code}.html
+特点：
+- 数据全（含近1年收益率，JJJZ 接口拿不到）
+- 但依赖 HTML class/正则，前端改版会失效，因此降级为备源
+- 本项目里它同时承担两个角色：
+    1. 限购信息的备份（JJJZ 失败时兜底）
+    2. 近1年收益率的唯一来源（不参与备份决策，仅用于卡片图渲染）
 """
 
 import re
@@ -8,6 +15,8 @@ import time
 import random
 import requests
 from typing import Optional
+
+from fund_monitor.fetch.sources.base import SourceRecord, empty_record
 
 FUND_URL = "http://fund.eastmoney.com/{code}.html"
 
@@ -23,22 +32,11 @@ HEADERS = {
 }
 
 
-def _empty_result(code: str) -> dict:
-    return {
-        "code": code,
-        "name": "",
-        "purchase_status": "未知",
-        "purchase_limit": "未知",
-        "return_1y": "",
-        "error": None,
-    }
-
-
 def _parse_page(html: str) -> Optional[dict]:
-    """从天天基金页面 HTML 中解析限购信息和收益率"""
+    """从 HTML 中解析限购信息和近1年收益率"""
     info = {}
 
-    # 基金名称（从 <title>）
+    # 基金名称
     m = re.search(r"<title>(.+?)\((\d{6})\)", html)
     if m:
         info["name"] = m.group(1).strip()
@@ -91,7 +89,6 @@ def _parse_page(html: str) -> Optional[dict]:
             info["purchase_limit"] = amount if "元" in amount else f"{amount}元"
             break
 
-    # 状态是限大额但没解析到具体金额
     if info.get("purchase_status") == "限大额" and "purchase_limit" not in info:
         info["purchase_limit"] = "限大额(金额未知)"
 
@@ -100,51 +97,34 @@ def _parse_page(html: str) -> Optional[dict]:
     return None
 
 
-def fetch_one(code: str) -> dict:
-    """抓取单只基金信息"""
-    result = _empty_result(code)
+def fetch_one(code: str, timeout: int = 15) -> SourceRecord:
+    """抓取单只基金的 HTML 详情。"""
+    rec = empty_record(code)
     try:
-        resp = requests.get(
-            FUND_URL.format(code=code), headers=HEADERS, timeout=15
-        )
+        resp = requests.get(FUND_URL.format(code=code), headers=HEADERS, timeout=timeout)
         resp.encoding = "utf-8"
         if resp.status_code != 200:
-            result["error"] = f"HTTP {resp.status_code}"
-            return result
-
+            rec["error"] = f"HTTP {resp.status_code}"
+            return rec
         info = _parse_page(resp.text)
         if info:
-            result.update(info)
+            rec.update(info)
         else:
-            result["error"] = "未获取到限购信息"
+            rec["error"] = "HTML 中未解析到限购信息"
     except Exception as e:
-        result["error"] = str(e)
-    return result
+        rec["error"] = str(e)
+    return rec
 
 
-def fetch_all(fund_list: list[dict]) -> list[dict]:
+def fetch_many(codes: list[str], delay: tuple = (1.0, 2.5)) -> dict[str, SourceRecord]:
     """
-    批量抓取基金信息
-
-    Args:
-        fund_list: [{"code": "008971", "name": "..."}, ...]
+    批量抓取（HTML 是单只一次请求，控制速率防封）。
+    返回 {code: SourceRecord}。
     """
-    results = []
-    total = len(fund_list)
-    for i, fund in enumerate(fund_list):
-        code = fund["code"]
-        name = fund.get("name", "")
-        print(f"  [{i + 1}/{total}] {name} ({code})...")
-
-        info = fetch_one(code)
-        if not info.get("name") or len(info["name"]) < 4:
-            info["name"] = name
-        # 保留 config 中的 display 字段
-        if fund.get("display"):
-            info["display"] = fund["display"]
-        results.append(info)
-
-        if i < total - 1:
-            time.sleep(random.uniform(1.0, 2.5))
-
-    return results
+    out = {}
+    n = len(codes)
+    for i, code in enumerate(codes):
+        out[code] = fetch_one(code)
+        if i < n - 1:
+            time.sleep(random.uniform(*delay))
+    return out

@@ -16,11 +16,13 @@ class FeishuNotifier:
         else:
             self.webhook_urls = [w for w in (webhook_urls or []) if w]
 
-    def send_reminder(self, image_urls: list = None, changes_text: str = None):
+    def send_reminder(self, image_urls: list = None, changes_text: str = None,
+                      health_text: str = None):
         """
         发送每日提醒：
         - 卡片图按钮
         - 如果有额度变化，附带可复制的小红书文案
+        - 如果有数据源健康警告（stale/失败/主备不一致），附在最末尾
         """
         today = datetime.now().strftime("%Y-%m-%d")
         title = f"📊 纳斯达克基金限购日报 {today}"
@@ -53,6 +55,14 @@ class FeishuNotifier:
             elements.append({
                 "tag": "markdown",
                 "content": changes_text,
+            })
+
+        # 数据源健康警告（主备不一致 / 历史兜底 / 抓取失败）
+        if health_text:
+            elements.append({"tag": "hr"})
+            elements.append({
+                "tag": "markdown",
+                "content": health_text,
             })
 
         self._send_card(title, elements)

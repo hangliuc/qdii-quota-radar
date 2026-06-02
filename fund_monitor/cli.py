@@ -7,10 +7,9 @@ import uuid
 from datetime import datetime
 
 from fund_monitor.config import Config
-from fund_monitor.scraper import fetch_all
-from fund_monitor.history import History
-from fund_monitor.image import generate
-from fund_monitor.notifier import FeishuNotifier
+from fund_monitor.fetch import fetch_all
+from fund_monitor.storage import History
+from fund_monitor.output import generate, FeishuNotifier
 from fund_monitor.trading_day import is_trading_day
 
 IMAGE_DIR = "docs"
@@ -40,7 +39,8 @@ def main():
     suffix = uuid.uuid4().hex[:6]
     image_dir = os.path.join(root, IMAGE_DIR)
     image_urls = []
-    all_changes = []  # 收集所有变化
+    all_changes = []          # 收集所有变化
+    all_health_warnings = []  # 收集数据源健康警告
 
     # ── 被动型基金 ──
     if config.passive_funds:
@@ -48,7 +48,13 @@ def main():
         print(f"🚀 被动型基金：查询 {len(funds)} 只...")
         print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-        results = fetch_all(funds)
+        history_path = _resolve(root, config.history_file)
+        passive_history = History(history_path, namespace="passive").latest_snapshot()
+
+        results = fetch_all(funds, history_latest=passive_history)
+        _print_health(results, "被动型")
+        all_health_warnings.extend(_collect_health(results, "被动型"))
+
         changes = _record_history(args, root, config, results, "passive")
         all_changes.extend(changes)
 
@@ -66,7 +72,13 @@ def main():
         print(f"\n🚀 主动型基金：查询 {len(funds)} 只...")
         print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-        results = fetch_all(funds)
+        history_path = _resolve(root, config.history_file)
+        active_history = History(history_path, namespace="active").latest_snapshot()
+
+        results = fetch_all(funds, history_latest=active_history)
+        _print_health(results, "主动型")
+        all_health_warnings.extend(_collect_health(results, "主动型"))
+
         changes = _record_history(args, root, config, results, "active")
         all_changes.extend(changes)
 
@@ -82,7 +94,8 @@ def main():
     if not args.no_notify:
         webhooks = [] if args.dry_run else config.all_webhooks
         changes_text = History.format_changes_for_feishu(all_changes)
-        FeishuNotifier(webhooks).send_reminder(image_urls, changes_text)
+        health_text = _format_health_for_feishu(all_health_warnings)
+        FeishuNotifier(webhooks).send_reminder(image_urls, changes_text, health_text)
 
     print("\n✅ 完成！")
 
@@ -107,6 +120,57 @@ def _record_history(args, root, config, results, prefix):
     if errors:
         print(f"  ⚠️ {errors} 只基金查询失败")
     return changes
+
+
+def _print_health(results: list[dict], group_label: str):
+    """控制台打印数据源健康状况"""
+    by_src = {"jjjz": 0, "html": 0, "stale": 0, "none": 0}
+    warnings = []
+    for r in results:
+        by_src[r.get("source", "none")] = by_src.get(r.get("source", "none"), 0) + 1
+        for w in r.get("warnings", []) or []:
+            warnings.append(f"  · {r.get('name', r['code'])}({r['code']}): {w}")
+    print(f"\n  📊 {group_label} 数据源：主源 jjjz={by_src['jjjz']} | "
+          f"备源 html={by_src['html']} | 历史兜底 stale={by_src['stale']} | "
+          f"失败 none={by_src['none']}")
+    if warnings:
+        print(f"  ⚠️ {group_label} 数据警告：")
+        for w in warnings:
+            print(w)
+
+
+def _collect_health(results: list[dict], group_label: str) -> list[dict]:
+    """提取需要告警的条目（用于飞书通知）"""
+    out = []
+    for r in results:
+        src = r.get("source", "none")
+        if src in ("stale", "none") or r.get("warnings"):
+            out.append({
+                "group": group_label,
+                "code": r["code"],
+                "name": r.get("display") or r.get("name", ""),
+                "source": src,
+                "confidence": r.get("confidence", "low"),
+                "warnings": r.get("warnings") or [],
+                "error": r.get("error"),
+            })
+    return out
+
+
+def _format_health_for_feishu(items: list[dict]):
+    """格式化数据源健康警告，用于飞书消息底部追加。"""
+    if not items:
+        return None
+    lines = ["⚠️ **数据源健康提醒**：", ""]
+    for it in items:
+        tag = {"stale": "📦 历史兜底", "none": "❌ 抓取失败",
+               "html": "🔁 备源", "jjjz": "✅ 主源"}.get(it["source"], it["source"])
+        lines.append(f"- [{it['group']}] {it['name']}({it['code']}) {tag}")
+        for w in it["warnings"]:
+            lines.append(f"    · {w}")
+        if it.get("error") and not it["warnings"]:
+            lines.append(f"    · {it['error']}")
+    return "\n".join(lines)
 
 
 def _parse_args():

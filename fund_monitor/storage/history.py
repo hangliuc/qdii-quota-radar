@@ -28,6 +28,13 @@ class History:
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump(self._data, f, ensure_ascii=False, indent=2)
 
+    def latest_snapshot(self) -> dict:
+        """
+        返回当前 namespace 下的最近一次快照（只读），用作主备源都失败时的兜底。
+        结构：{code: {"name", "purchase_status", "purchase_limit"}}
+        """
+        return dict(self._data.get(self.ns, {}).get("latest", {}))
+
     def update(self, results: list[dict]) -> list[dict]:
         today = datetime.now().strftime("%Y-%m-%d")
         ns_data = self._data.setdefault(self.ns, {})

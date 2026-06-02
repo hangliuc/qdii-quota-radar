@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-02
+
+- **feat**: 新增第二个 JSON 主源 `eastmoney_ranking`（`rankhandler.aspx`），为近1年收益率提供独立链路
+  - 抓取层升级为"双 JSON 主源 + HTML 备源"模式：JJJZ 给限购、RANKING 给业绩，HTML 仅在主源失败/缺漏时启用
+  - 正常路径下 37 只基金的抓取从"1 + 37 次 HTTP 请求"压缩到"2 次全市场 JSON 请求"，速度快一个数量级
+  - 收益率字段从 HTML 正则升级为 JSON 索引，前端改版不再影响该字段
+- **feat**: 数据源高可用改造 —— 引入主备双源 + 历史兜底 + 交叉验证
+  - 主源：天天基金 JSON 接口 `Fund_JJJZ_Data.aspx`（一次拉全市场快照，结构稳定）
+  - 备源：原有 HTML 详情页解析（前端改版时降级使用）
+  - 兜底：主备都失败时自动回退到 `history.json` 上次快照，飞书加 ⚠️ 标记
+  - 交叉验证：主备同时成功时比对申购状态与限额，不一致打 warning（不阻塞）
+  - 每条结果新增 `source`/`confidence`/`warnings` 字段；CLI 新增数据源健康面板；飞书新增"数据源健康提醒"区块
+- **refactor**: 重新整理目录结构为三层（`fetch/` 抓取、`storage/` 存储、`output/` 输出）+ 入口（cli/config/trading_day），原 scraper.py 外观入口移除，由 `fund_monitor.fetch.fetch_all` 接管
+
 ## 2026-05-26
 
 - **feat**: 飞书支持多 webhook 推送，新增 `feishu_webhooks` 配置数组（与 env 注入的 `FEISHU_WEBHOOK` 合并去重）

@@ -6,7 +6,7 @@ venv/
 *.egg-info/
 dist/
 build/
-output/
+/output/
 .vscode/
 .DS_Store
 docs/*.png
