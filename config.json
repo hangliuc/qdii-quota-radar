@@ -41,7 +41,8 @@
     {"code": "008254", "name": "华宝致远混合(QDII)C", "display": "华宝致远混合"},
     {"code": "017093", "name": "景顺长城纳斯达克科技(QDII)C", "display": "景顺长城纳斯达克科技"},
     {"code": "016665", "name": "天弘全球高端制造(QDII)C", "display": "天弘全球高端制造"},
-    {"code": "002891", "name": "华夏移动互联灵活配置混合(QDII)", "display": "华夏移动互联"}
+    {"code": "002891", "name": "华夏移动互联灵活配置混合(QDII)", "display": "华夏移动互联"},
+    {"code": "021662", "name": "国富亚洲机会股票(QDII)C", "display": "国富亚洲机会"}
   ],
   "history_file": "data/history.json",
   "image_base_url": ""
