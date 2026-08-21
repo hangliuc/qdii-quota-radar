@@ -17,14 +17,27 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            APP_DIR=/root/alipay-nasdaq-fund-monitor
+            APP_DIR=/root/qdii-quota-radar
+            OLD_DIR=/root/alipay-nasdaq-fund-monitor
+            REPO_URL=https://github.com/hangliuc/qdii-quota-radar.git
+
+            # 一次性迁移：项目改名前的旧目录整体搬到新路径
+            # 先停掉旧容器（旧 compose 的 container_name 与新的不同，
+            # 不停会残留一个实例继续跑 cron，导致飞书重复推送）
+            if [ ! -d "$APP_DIR" ] && [ -d "$OLD_DIR" ]; then
+              echo "检测到旧目录 $OLD_DIR，开始迁移到 $APP_DIR"
+              cd "$OLD_DIR" && docker compose down || true
+              mv "$OLD_DIR" "$APP_DIR"
+            fi
 
             # 首次部署：clone
             if [ ! -d "$APP_DIR" ]; then
-              git clone https://github.com/hangliuc/alipay-nasdaq-fund-monitor.git $APP_DIR
+              git clone $REPO_URL $APP_DIR
             fi
 
             cd $APP_DIR
+            # 改名后旧目录里的 remote 仍指向旧地址，这里统一纠正
+            git remote set-url origin $REPO_URL
             git fetch origin main
             git reset --hard origin/main
 

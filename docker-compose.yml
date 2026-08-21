@@ -2,7 +2,7 @@ services:
   # 定时抓取 + 生成图片 + 飞书通知
   monitor:
     build: .
-    container_name: fund-monitor
+    container_name: qdii-quota-radar
     restart: unless-stopped
     environment:
       - FEISHU_WEBHOOK=${FEISHU_WEBHOOK}
@@ -15,7 +15,7 @@ services:
   # nginx 提供图片访问（飞书按钮链接指向这里）
   nginx:
     image: nginx:alpine
-    container_name: fund-images
+    container_name: qdii-quota-radar-nginx
     restart: unless-stopped
     ports:
       - "8900:80"

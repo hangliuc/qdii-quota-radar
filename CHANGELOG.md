@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-21
+
+- **refactor**: 项目改名为 `qdii-quota-radar`，统一 GitHub 仓库名、本地目录、容器名与日志名
+  - 原本三处名字不一致（本地 `fund-limit-monitor`、仓库 `qdii-fund-monitor`、remote 仍指向更早的 `alipay-nasdaq-fund-monitor`），本次全部对齐
+  - `limit` 在金融语境歧义大（限购/规模上限/风控限额），改用 `quota` 明确指向"申购额度"
+  - 容器名 `fund-monitor` → `qdii-quota-radar`，`fund-images` → `qdii-quota-radar-nginx`
+  - `deploy.yml` 新增一次性迁移逻辑：停旧容器 → 整体 `mv` 旧目录 → 纠正 remote，保留 `data/history.json` 与 `.env`
+  - Python 包名 `fund_monitor` 保持不变
+- **feat**: 新增 `manual-run.yml` 手动工作流，可按需在服务器上触发一次真实运行（`dry_run` / `no_history` 开关），用于部署后立即验证抓取与飞书推送，不必等到次日 cron
+
 ## 2026-06-02
 
 - **feat**: 新增第二个 JSON 主源 `eastmoney_ranking`（`rankhandler.aspx`），为近1年收益率提供独立链路

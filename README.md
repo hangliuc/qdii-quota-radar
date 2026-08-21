@@ -150,12 +150,23 @@ Push 到 `main` 分支会通过 GitHub Actions 自动部署。首次部署会自
 
 ### 手动验证
 
+不想等次日 cron 时，可以在 GitHub Actions 里手动触发 **Manual Run (on server)** 工作流，它会 SSH 到服务器执行一次真实运行，带两个开关：
+
+| 输入 | 默认 | 说明 |
+|------|------|------|
+| `dry_run` | false | 勾选则只在控制台输出，不推送飞书 |
+| `no_history` | true | 默认不写入 `history.json`，避免测试污染历史数据 |
+
+也可以直接在服务器上执行：
+
 ```bash
-# SSH 到服务器，手动执行一次
-docker compose run --rm monitor python main.py
+cd /root/qdii-quota-radar
+
+# 手动执行一次（--force 忽略节假日检查）
+docker compose run --rm monitor python main.py --force
 
 # 查看定时任务日志
-docker logs fund-monitor
+docker logs qdii-quota-radar
 ```
 
 ## 本地开发

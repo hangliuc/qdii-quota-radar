@@ -25,9 +25,9 @@ ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 生成 crontab（环境变量通过 env 文件注入）
-RUN echo '16 7 * * * cd /app && /usr/local/bin/python main.py >> /var/log/fund-monitor.log 2>&1' > /etc/cron.d/fund-monitor && \
-    chmod 0644 /etc/cron.d/fund-monitor && \
-    crontab /etc/cron.d/fund-monitor && \
-    touch /var/log/fund-monitor.log
+RUN echo '16 7 * * * cd /app && /usr/local/bin/python main.py >> /var/log/qdii-quota-radar.log 2>&1' > /etc/cron.d/qdii-quota-radar && \
+    chmod 0644 /etc/cron.d/qdii-quota-radar && \
+    crontab /etc/cron.d/qdii-quota-radar && \
+    touch /var/log/qdii-quota-radar.log
 
-CMD ["sh", "-c", "printenv > /etc/environment && cron && tail -f /var/log/fund-monitor.log"]
+CMD ["sh", "-c", "printenv > /etc/environment && cron && tail -f /var/log/qdii-quota-radar.log"]

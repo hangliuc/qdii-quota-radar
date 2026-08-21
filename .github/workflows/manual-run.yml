@@ -1,0 +1,41 @@
+name: Manual Run (on server)
+
+# 手动在服务器上触发一次运行，用于部署后立即验证抓取 + 飞书推送，
+# 不必等到次日早上 7:16 的 cron。
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '只在控制台输出，不推送飞书'
+        type: boolean
+        default: false
+      no_history:
+        description: '不写入 history.json（避免测试污染历史数据）'
+        type: boolean
+        default: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run once on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /root/qdii-quota-radar
+
+            # inputs 为 boolean 类型，取值只能是 true/false，可安全插值
+            ARGS="--force"
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              ARGS="$ARGS --dry-run"
+            fi
+            if [ "${{ inputs.no_history }}" = "true" ]; then
+              ARGS="$ARGS --no-history"
+            fi
+
+            echo "执行: python main.py $ARGS"
+            docker compose run --rm monitor python main.py $ARGS
