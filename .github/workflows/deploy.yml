@@ -55,3 +55,29 @@ jobs:
             docker compose up -d
 
             echo "✅ 部署完成"
+
+            # ---- 部署自检 ----
+            sleep 5
+            docker compose ps
+
+            # 历史数据是否还在（改名迁移时最容易丢的东西）
+            if [ -f data/history.json ]; then
+              echo "✅ history.json 存在（$(wc -c < data/history.json) 字节）"
+            else
+              echo "⚠️  history.json 不存在，额度变动检测首次运行会失效"
+            fi
+
+            # 卡片图能否通过 nginx 访问（飞书按钮链接指向这里）
+            LATEST=$(ls -t docs/*.png 2>/dev/null | head -1)
+            if [ -n "$LATEST" ]; then
+              NAME=$(basename "$LATEST")
+              CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8900/$NAME")
+              if [ "$CODE" = "200" ]; then
+                echo "✅ nginx 可访问卡片图：$NAME"
+              else
+                echo "❌ nginx 返回 $CODE，卡片图无法访问：$NAME"
+                exit 1
+              fi
+            else
+              echo "ℹ️  docs/ 下暂无卡片图，跳过 nginx 检查"
+            fi
